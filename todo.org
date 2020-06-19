@@ -1,0 +1,36 @@
+* [4/5] App
+** DONE basic test example in nav https://js.cytoscape.org/#getting-started
+** DONE basic react: test_react.html
+** DONE Utiliser le nouveau React : React Funcion Components et useState, (useEffect)
+https://reactjs.org/docs/components-and-props.html
+https://reactjs.org/docs/hooks-intro.html
+https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
+** DONE on peut utiliser un component depuis Cytoscape
+*** Component qui peut servir à ajouter un NOUVEAU Faction ou modifier
+** TODO Fcontion pour modifier une faction existante.
+* TODO [5/7] Fabric.js
+** DONE make rectangle + ligne (+arrow head or point)
+** DONE compute intersection rectangle (bbox)/line (Hori and Ver)
+** TODO Faction style
+** TODO arrow + legend between 2 rectangles (bbox)
+** DONE [4/4] click droit pour créer une nouvelle Faction
+*** DONE Event click droit
+*** DONE Struct Faction et liste de Faction
+*** DONE Style Faction
+*** DONE React pour new Faction (sur Canvas) ?
+** DONE List all Factions (Btn)
+** DONE Edit Faction name
+** Color for Faction
+** [0/2] Contextual Menu
+*** TODO Menu
+*** Edit
+*** Relation arrow
+Fires:
+    event:changed
+    selection:changed
+    editing:entered
+    editing:exited
+*** TODO Relation Name/Label
+* DONE use Babel 
+npm install --save-dev @babel/preset-react
+RelationJS>$ npx babel src --out-dir lib

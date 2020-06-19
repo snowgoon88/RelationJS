@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>React Faction</title>
+
+
+     <link rel="stylesheet" href="general.css">
+     <!-- Imports *********************************************** -->
+     <script type="application/javascript" src="lib/react.js"></script>
+     <script type="application/javascript" src="lib/react-dom.js"></script>
+     <script src="lib/cytoscape.min.js"></script>
+  </head>
+
+  <body>
+    <div id="cy_canvas" class="border"></div>
+    <div id="react_root" class="border"></div>
+    <button id="btn_rand" type="button">Rand</button>
+    
+    <script type="text/javascript" src="src/basic_command.js"></script>
+    <script type="text/javascript" src="lib/faction.js"></script>
+
+    <button id="btn_dummy" type="button" onClick="onDummyBtn()">
+      ShowDummy
+    </button>
+
+    <button id="btn_addL" type="button" onClick="addFactionListener(logFaction)">
+      Add F
+    </button>
+    <button id="btn_rmL" type="button" onClick="removeFactionListener(logFaction)">
+      Del F
+    </button>
+    
+  </body>
+</html>

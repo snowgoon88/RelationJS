@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Playing with Fabric.js</title>
+
+
+    <link rel="stylesheet" href="general.css">
+    <!-- Imports *********************************************** -->
+    <script type="application/javascript" src="lib/react.js"></script>
+    <script type="application/javascript" src="lib/react-dom.js"></script>
+    <script src="lib/fabric.js"></script>
+
+    <!-- tried Cose-bilkent, no success
+    <script src="lib/layout-base.js"></script>
+    <script src="lib/cose-base.js"></script>
+    <script src="lib/cytoscape-cose-bilkent.js"></script>-->
+  </head>
+
+  <body>
+    <div id="fabric_menu" class="popup"><h2>Popout</h2>Bouh<br/>Bah</div>
+    
+    <canvas id="fabric_canvas" class="border"></canvas>
+    <div id="react_red" class="border"></div>
+    <!--<script type="text/javascript" src="src/getting_started.js"></script>-->
+    <script type="text/javascript" src="lib/object_freact.js"></script>
+    <script type="text/javascript" src="lib/basic_fabric.js"></script>
+
+    <button id="btn_info" type="button" onClick="getInfo( rectRed )">
+      RectRED
+    </button>
+    <button id="btn_bezier" type="button" onClick="btnBezier()">
+      Bezier
+    </button>
+    <button id="btn_ctrl" type="button" onClick="btnCtrl()">
+      Ctrl
+    </button>
+  </body>
+</html>
+
