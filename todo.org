@@ -1,3 +1,4 @@
+* Bug : cG bouge pas dans [[file:src/basic_fabric.jsx::214]]
 * [4/5] App
 ** DONE basic test example in nav https://js.cytoscape.org/#getting-started
 ** DONE basic react: test_react.html
@@ -7,7 +8,8 @@ https://reactjs.org/docs/hooks-intro.html
 https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 ** DONE on peut utiliser un component depuis Cytoscape
 *** Component qui peut servir à ajouter un NOUVEAU Faction ou modifier
-** TODO Fcontion pour modifier une faction existante.
+** TODO Fonction pour modifier une faction existante.
+
 * TODO [5/7] Fabric.js
 ** DONE make rectangle + ligne (+arrow head or point)
 ** DONE compute intersection rectangle (bbox)/line (Hori and Ver)
@@ -20,9 +22,21 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 *** DONE React pour new Faction (sur Canvas) ?
 ** DONE List all Factions (Btn)
 ** DONE Edit Faction name
+** Group with circle and Name
 ** Color for Faction
+** [/] Faction
+*** lister
+*** save
+*** load
 ** [0/2] Contextual Menu
-*** TODO Menu
+*** TODO [0/1] Menu
+**** [0/0] Background
+***** New Faction
+**** TODO [2/4] Faction
+***** DONE Edit
+***** TODO New Relation
+***** DONE ----
+***** TODO Delete
 *** Edit
 *** Relation arrow
 Fires:
@@ -34,3 +48,12 @@ Fires:
 * DONE use Babel 
 npm install --save-dev @babel/preset-react
 RelationJS>$ npx babel src --out-dir lib
+* ORG
+** Link [[link][display
+*** <<anchor>>
+*** file:rel_path::NNN or ::search words
+*** C-c l : store link
+*** C-c C-o : follow link
+*** C-c C-l : edit link/insert link
+** TODO
+*** C-c / t : sparse todo tree

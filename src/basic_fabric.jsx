@@ -138,9 +138,9 @@ var quadPath = new fabric.Path('M100,100 Q120,250 200,350', {
   lockScalingY: true,
   lockSkewingX: true,
   lockSkewingY: true,
-  srcOld: {left: 100, top: 100},
-  destOld: {left: 200, top: 350},
-  ctrlOld: {left: 120, top: 250},
+  srcPt: {left: 100, top: 100},
+  destPt: {left: 200, top: 350},
+  ctrlPt: {left: 120, top: 250},
 });
 var cQ = new fabric.Circle({
   originX: 'center',
@@ -161,6 +161,18 @@ var cQ = new fabric.Circle({
   lockSkewingX: true,
   lockSkewingY: true,
 });
+var cMidQ = new fabric.Circle({
+  originX: 'center',
+  left: computeBezierPt( {left: 100, top: 100}, {left: 200, top: 350},
+                         {left: 120, top: 250}, 0.5 ).left,
+  originY: 'center',
+  top: computeBezierPt( {left: 100, top: 100}, {left: 200, top: 350},
+                         {left: 120, top: 250}, 0.5 ).top,
+  radius: 10,
+  stroke: 'black',
+  fill: false,
+  selectable: false,
+});
 var triQ = new fabric.Triangle({
   originX: 'center',
   left: 10,
@@ -174,6 +186,7 @@ var triQ = new fabric.Triangle({
 canvas.add( quadPath );
 canvas.add( cQ );
 canvas.add( triQ );
+canvas.add( cMidQ );
 function toPathArray( start, end, control ) {
   var path = [];
   path.push( ["M", start.x, start.y] );
@@ -199,6 +212,7 @@ function showVec( msg, vec ) {
   console.log( msg+'=( '+vec.left.toString()+', '+vec.top.toString()+')' );
 };
 function updateBezier( src, dest, ctrl) {
+  console.log( "__UpdateBEZ" );
   if (ctrl) {
     console.log( "UpdateB with CTRL" );
   }
@@ -209,9 +223,9 @@ function updateBezier( src, dest, ctrl) {
      * let destOld = {left: oldPath[1][3], top:oldPath[1][4]};
      * let ctrlOld = {left: oldPath[1][1], top:oldPath[1][2]}; */
 
-    let srcOld = quadPath.get( 'srcOld' );
-    let destOld = quadPath.get( 'destOld');
-    let ctrlOld = quadPath.get( 'ctrlOld');
+    let srcOld = quadPath.get( 'srcPt' );
+    let destOld = quadPath.get( 'destPt');
+    let ctrlOld = quadPath.get( 'ctrlPt');
     
     let srcCtrlOld = {left: ctrlOld.left - srcOld.left,
                       top: ctrlOld.top - srcOld.top};
@@ -268,9 +282,9 @@ function updateBezier( src, dest, ctrl) {
   );
   quadPath.set( {
     'path' : path,
-    'srcOld': src,
-    'destOld': dest,
-    'ctrlOld': ctrl,
+    'srcPt': {left:src.left, top:src.top},
+    'destPt': {left:dest.left, top:dest.top},
+    'ctrlPt': {left:ctrl.left, top:ctrl.top},
   });
   //cQ.set( {'left':120, 'top':250} );
   // https://stackoverflow.com/questions/29011717/update-fabric-js-path-points-dynamically
@@ -286,7 +300,28 @@ function updateBezier( src, dest, ctrl) {
     },
     dirty: true
   })
-  quadPath.setCoords()
+  quadPath.setCoords();
+
+  // then the middle point
+  var midPt = computeBezierPt( {left:coordR.x, top:coordR.y},
+                               {left:coordG.x, top:coordG.y},
+                                {left: ctrl.left, top:ctrl.top}, 0.5 );
+  cMidQ.set({
+    'left': midPt.left,
+    'top': midPt.top,
+  });
+}
+// Compute the position of a point at absice 'abs' on segment [src,dest]
+function segmentPt( src, dest, abs ) {
+  let x = src.left + abs * (dest.left - src.left);
+  let y = src.top + abs * (dest.top - src.top);
+  return {left:x, top:y};
+}
+// Compute a bezier point with absice 'ab'
+function computeBezierPt( src, dest, ctrl, abs ) {
+  let pt1 = segmentPt( src, ctrl, abs );
+  let pt2 = segmentPt( ctrl, dest, abs );
+  return segmentPt( pt1, pt2, abs );
 }
 function btnBezier() {
   var path = quadPath.get( 'path' );
@@ -454,26 +489,26 @@ quadPath.on( 'selected', function() {
 // *****************************************************************************
 // *****************************************************************************
 // test right click
-var popupElement = document.getElementById( 'fabric_menu' );
-function askNewFaction( x, y ) {
-  console.log( 'askN',x,y );
-  popupElement.style.left = x + 'px';
-  popupElement.style.top = y + 'px';
-  ReactDOM.render(
-  <FObjectC
-    object={rectRed}
-    setObjectHandle={setObjectFunction}
-    />,
-  document.getElementById( 'fabric_menu' )
-);
-}
-canvas.on( 'mouse:down', function (opt) {
-  console.log( 'E',opt );
-  if (opt.button === 1 && opt.target === null) {
-    //use mouseEvent to know absolute position
-    askNewFaction( opt.e.x, opt.e.y );
-  }
-});
+/* var popupElement = document.getElementById( 'fabric_menu' );
+ * function askNewFaction( x, y ) {
+ *   console.log( 'askN',x,y );
+ *   popupElement.style.left = x + 'px';
+ *   popupElement.style.top = y + 'px';
+ *   ReactDOM.render(
+ *   <FObjectC
+ *     object={rectRed}
+ *     setObjectHandle={setObjectFunction}
+ *     />,
+ *   document.getElementById( 'fabric_menu' )
+ * );
+ * }
+ * canvas.on( 'mouse:down', function (opt) {
+ *   console.log( 'E',opt );
+ *   if (opt.button === 1 && opt.target === null) {
+ *     //use mouseEvent to know absolute position
+ *     askNewFaction( opt.e.x, opt.e.y );
+ *   }
+ * }); */
 
 /* rectRed.on( 'moving', function() {
  *   console.log( 'RED moving' );
@@ -483,12 +518,12 @@ canvas.on( 'mouse:down', function (opt) {
  *   console.log( 'RED moved' );
  * });
  *  */
-const rectRedElem = <FObjectC
-object={rectRed}
-setObjectHandle={setObjectFunction}
-/>;
-
-ReactDOM.render(
-  rectRedElem,
-  document.getElementById( 'react_red' )
-);
+/* const rectRedElem = <FObjectC
+ * object={rectRed}
+ * setObjectHandle={setObjectFunction}
+ * />;
+ * 
+ * ReactDOM.render(
+ *   rectRedElem,
+ *   document.getElementById( 'react_red' )
+ * ); */

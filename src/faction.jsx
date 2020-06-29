@@ -17,6 +17,7 @@ bodyElement.addEventListener( 'keyup', function (event) {
   if (event.key === "Escape" ) {
     //console.log( "  ESC" );
     displayPopup( false );
+    removeContextMenuC();
   }
 });
 
@@ -34,7 +35,7 @@ var canvas = new fabric.Canvas( 'fabric_canvas', {
 // *****************************************************************************
 // ********************************************************************* Faction
 // *****************************************************************************
-class Faction {
+class FactionM {
   constructor( id, name ) {
     this.id = id;
     this.name = name;
@@ -46,8 +47,8 @@ class Faction {
 }
 // ***** to Manage Faction.id
 var _idmax_faction = 0;
-function makeNewFaction( name ) {
-  var nf = new Faction( _idmax_faction, name );
+function makeNewFactionM( name ) {
+  var nf = new FactionM( _idmax_faction, name );
   _idmax_faction += 1;
 
   return nf;
@@ -63,10 +64,10 @@ function setFactionFunctor (cbk) {
 // ******************************************************************** FactionF
 // *****************************************************************************
 // require: fabric.js
-function addFactionF( faction, pos, colorRGB ) {
+function addFactionF( factionM, pos, colorRGB ) {
   let colRGBA = 'rgba( '+colorRGB[0]+', '+colorRGB[1]+', '+colorRGB[2]+', 0.2)';
-  var labelF = new fabric.IText( 'F'+faction.id+': '+faction.name, {
-    id: faction.id,
+  var labelF = new fabric.IText( 'F'+factionM.id+': '+factionM.name, {
+    id: factionM.id,
     left: pos.x,
     top: pos.y,
     fontSize: 20,
@@ -87,8 +88,8 @@ function addFactionF( faction, pos, colorRGB ) {
   
   return labelF;                               
 }
-function editFactionF( labelF, faction ) {
-  labelF.set( {'text' : 'F'+faction.id+': '+faction.name } );
+function editFactionF( labelF, factionM ) {
+  labelF.set( {'text' : 'F'+factionM.id+': '+factionM.name } );
 }
 // ************************************************************** END - FactionF
 
@@ -134,18 +135,18 @@ const TextCellC = (props) => {
 
 // *****************************************************************************
 // ******************************************************************** FactionC
-// Faction, mode="edit"|"add", setFactionHandle, addCallback
+// FactionM, mode="edit"|"add", setFactionHandle, addCallback
 const FactionC = (props) => {
   //console.log( 'New FC for '+props.faction.name );
-  const [name, setName] = React.useState( props.faction.name );
-  const [id, setId] = React.useState( props.faction.id );
+  const [name, setName] = React.useState( props.factionM.name );
+  const [id, setId] = React.useState( props.factionM.id );
   const [mode, setMode] = React.useState( props.mode );
   const [x, setX] = React.useState( props.pos.x );
   const [y, setY] = React.useState( props.pos.y );
   
-  const setFaction = (faction, pos, mode) => {
-    setName( faction.name );
-    setId( faction.id );
+  const setFaction = (factionM, pos, mode) => {
+    setName( factionM.name );
+    setId( factionM.id );
     setMode( mode );
     setX( pos.x );
     setY( pos.y );
@@ -155,11 +156,11 @@ const FactionC = (props) => {
   // props.addListener( setFaction );
   
   const handleBtnAdd = () => {
-    props.addCallback( new Faction( id, name), {x:x, y:y} );
+    props.addCallback( new FactionM( id, name), {x:x, y:y} );
     //console.log( "FactionC name=", name, ", id=", id );
   }
   const handleBtnEdit = () => {
-    props.editCallback( new Faction( id, name), {x:x, y:y} );
+    props.editCallback( new FactionM( id, name), {x:x, y:y} );
   }
   const handleBtnCancel = () => {
     displayPopup( false );
@@ -208,18 +209,18 @@ const FactionC = (props) => {
 // *****************************************************************************
 // ***************************************************************** ListFaction
 // *****************************************************************************
-// Require: Faction, canvas (fabric)
-var _listFaction = [];
-function newFactionAction( faction, pos ) {
-  var nf = makeNewFaction( faction.name );
+// Require: FactionM, canvas (fabric)
+var _listFactionM = [];
+function newFactionAction( factionM, pos ) {
+  var nf = makeNewFactionM( factionM.name );
   var newFab = addFactionF( nf, pos, [0,0,255] );
-  _listFaction.push( {model:nf, view:newFab} );
+  _listFactionM.push( {model:nf, view:newFab} );
   displayPopup( false );
 }
-function editFactionAction( faction ) {
-  let view = _listFaction[faction.id].view;
-  editFactionF( view, faction );
-  _listFaction[faction.id] = {model:faction, view: view};
+function editFactionAction( factionM ) {
+  let view = _listFactionM[factionM.id].view;
+  editFactionF( view, factionM );
+  _listFactionM[factionM.id] = {model:factionM, view: view};
   displayPopup( false );
   canvas.renderAll();
 }
@@ -247,7 +248,7 @@ function displayPopup( flag ) {
   } 
 }
 const factionC = <FactionC
-                   faction={new Faction( -1, 'name' )}
+                   factionM={new FactionM( -1, 'name' )}
                    mode="add"
                    pos={{x: 100, y: 100}}
                    addCallback={newFactionAction}
@@ -259,22 +260,107 @@ ReactDOM.render(
   document.getElementById( 'fabric_menu' )
 );
 
-function askNewFaction( x, y ) {
+function askNewFactionM( x, y ) {
   //console.log( 'askN',x,y );
   popupElement.style.left = x + 'px';
   popupElement.style.top = y + 'px';
-  setFactionHandle( new Faction( -1, 'faction_name' ), {x: x, y:y}, "add" );
+  setFactionHandle( new FactionM( -1, 'faction_name' ), {x: x, y:y}, "add" );
   displayPopup( true );
 }
-function askEditFaction( faction, x, y ) {
-  //console.log( 'askE',x,y );
-  popupElement.style.left = x + 'px';
-  popupElement.style.top = y + 'px';
-  setFactionHandle( faction, {x: x, y:y}, "edit", );
+function askEditFactionM( factionM, pos ) {
+  console.log( 'askE',pos );
+  popupElement.style.left = pos.x + 'px';
+  popupElement.style.top = pos.y + 'px';
+  setFactionHandle( factionM, pos, "edit", );
   displayPopup( true );
 }
 // *************************************************************** END - Actions
 
+// *****************************************************************************
+// **************************************************************** Context Menu
+// *****************************************************************************
+const handleDummy = ( obj, pos ) => {
+  console.log( "DUMMY", obj, pos );
+}
+var _factionContextMenu = [
+  {label:"Edit", cbk::askEditFactionM},
+  {label:"TODONew Relation", cbk:handleDummy},
+  {label:"<hr>",cbk:null}, // separator
+  {label: "TodoDelete", cbk:handleDummy},
+];
+
+// FactionM, pos (x,y), 
+// items = [ {label, cnk] OR {label:"<hr>", cbk:null} for sep ]
+//
+// will call cbk( factionM, pos )
+const FactionMenu = (props) => {
+
+  // Build menu Items
+  const listItems = props.items.map( (item, index) => {
+    if (item.label === "<hr>") {
+      return(<hr key={index}/>);
+    }
+    return (
+      <span
+        key={index}
+        onClick={() =>  {
+          removeContextMenuC();
+          item.cbk(props.factionM, props.pos)
+        }}
+      >
+        {item.label}
+      </span>
+    );
+  });
+ 
+  return (
+    <div className="vertical_menu">
+    {listItems}
+    </div>
+  );
+}
+var contextMenuE = document.getElementById( 'context_menu' );
+// to prevent 'context menu for showing off
+contextMenuE.addEventListener( 'contextmenu', function(event) {
+  //console.log( "contextMenu contextmenu", event.buttons );
+  event.preventDefault();
+  event.stopPropagation();
+},
+                               true /* capture */
+);
+function displayContextMenu( flag ) {
+  if (flag) {
+    contextMenuE.style.display = "block";
+  }
+  else {
+    contextMenuE.style.display = "none";
+  } 
+}
+
+var _contextMenuE;
+function showContextMenuC( factionM, x, y ) {
+  console.log( "showContextMenuC",factionM,x,y );
+  _contextMenuE = document.createElement( "DIV" );
+  contextMenuE.appendChild( _contextMenuE );
+  _contextMenuE.innerHTML = "CMenu at "+x+"px, ",y+" px";
+  
+  contextMenuE.style.left = x + 'px';
+  contextMenuE.style.top = y + 'px';
+
+  ReactDOM.render(
+    <FactionMenu
+      factionM={factionM}
+      pos={{x:x, y:y}}
+      items={_factionContextMenu}
+    />,
+    _contextMenuE );
+  displayContextMenu( true );
+}
+function removeContextMenuC() {
+  console.log( "removeContextMenuC");
+  _contextMenuE.remove();
+  displayContextMenu( false );
+}
 // *****************************************************************************
 // ************************************************************* Fabric Callback
 // *****************************************************************************
@@ -285,15 +371,15 @@ canvas.on( 'mouse:down', function (opt) {
   if (opt.e.button === 2) {
     if (opt.target === null) {
       //use mouseEvent to know absolute position
-      askNewFaction( opt.e.x, opt.e.y );
+      askNewFactionM( opt.e.x, opt.e.y );
       //opt.e.preventDefault(); // no propagation of mouse event
       //opt.e.stopPropagation();
     }
     else {
       // console.log( "RC: ",opt );
       // console.log( "  F:",_listFaction[opt.target.id] );
-      askEditFaction( _listFaction[opt.target.id].model, opt.e.x, opt.e.y );
-      
+      //askEditFactionM( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y );
+      showContextMenuC( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y);
     }
   }
   /* if (event.button === 2) {
@@ -313,8 +399,8 @@ canvas.on( 'mouse:down', function (opt) {
 // *****************************************************************************
 // ********************************************************************* Buttons
 function btnInfo() {
-  console.log( "__Factions ("+_listFaction.length+")" );
-  _listFaction.forEach( (faction) => {
-    console.log( faction.model.strDisplay() )
+  console.log( "__Factions ("+_listFactionM.length+")" );
+  _listFactionM.forEach( (factionM) => {
+    console.log( factionM.model.strDisplay() )
   });
 };

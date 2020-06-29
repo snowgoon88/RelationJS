@@ -21,3 +21,13 @@
     box-sizing : border-box;
     z-index: 2; 
 }
+
+/* vertical menu */
+.vertical_menu span {
+    display: block; /* Make the links appear below each other */
+    padding: 5px; /* Add some padding */
+}
+.vertical_menu span:hover {
+    background-color: #ccc; /* Dark grey background on mouse-over */
+}
+
