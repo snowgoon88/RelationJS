@@ -17,6 +17,7 @@
 .popup {
     position: absolute;
     /*display: block;      /* hidden by default */
+    display: none;
     background-color: lightblue;
     box-sizing : border-box;
     z-index: 2; 

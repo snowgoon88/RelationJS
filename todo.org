@@ -24,10 +24,12 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 ** DONE Edit Faction name
 ** Group with circle and Name
 ** Color for Faction
-** [/] Faction
-*** lister
-*** save
-*** load
+** [5/5] Faction
+*** DONE lister
+*** DONE save
+*** DONE load
+*** DONE load : check not adding twice
+*** DONE load: why is _listFactionM not valid after load ?
 ** [0/2] Contextual Menu
 *** TODO [0/1] Menu
 **** [0/0] Background
@@ -48,6 +50,9 @@ Fires:
 * DONE use Babel 
 npm install --save-dev @babel/preset-react
 RelationJS>$ npx babel src --out-dir lib
+* DONE use FileSaver
+npm install file-saver
+faire les liens appropriés
 * ORG
 ** Link [[link][display
 *** <<anchor>>

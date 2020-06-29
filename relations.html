@@ -11,6 +11,7 @@
     <script type="application/javascript" src="lib/react-dom.js"></script>
     <!--script src="lib/fabric_3.6.3.min.js"></script-->
     <script src="lib/fabric_4.0.0.js"></script>
+    <script type="application/javascript" src="lib/FileSaver.js"></script>
 
   </head>
 
@@ -26,6 +27,8 @@
 
     <div id="bottom">
       <button id="btn_info" type="button" onClick="btnInfo()">Info</button>
+      <button id="btn_save" type="button" onClick="btnSave()">Save</button>
+      Load <input type="file" id="file-selector" onChange="btnLoad(event)">
     </div>
     
     <!-- SCRIPTS -->

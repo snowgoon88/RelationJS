@@ -53,6 +53,7 @@ function makeNewFactionM( name ) {
 
   return nf;
 }
+
 // ***** to Change the Faction displayed/edited in FactionC
 var setFactionHandle;
 function setFactionFunctor (cbk) {
@@ -217,12 +218,81 @@ function newFactionAction( factionM, pos ) {
   _listFactionM.push( {model:nf, view:newFab} );
   displayPopup( false );
 }
+function addFactionAction( factionM, pos ) {
+  if (factionM.id < 0) {
+    alert( "Cannot addFaction with improper id ("+factionM.id+")" );
+    return;
+  }
+  if (_listFactionM[factionM.id]) {
+    alert( "Cannot addFaction over existing one (id="+factionM.id+")" );
+    return;
+  }
+
+  let newM = new FactionM( factionM.id, factionM.name );
+  var newF = addFactionF( newM, pos, [0,0,255] );
+  _listFactionM.push( {model:newM, view:newF} );
+  displayPopup( false );
+}
 function editFactionAction( factionM ) {
   let view = _listFactionM[factionM.id].view;
   editFactionF( view, factionM );
   _listFactionM[factionM.id] = {model:factionM, view: view};
   displayPopup( false );
   canvas.renderAll();
+}
+function showAllFactionAction() {
+  // make new array with data to archive
+  let archive = _listFactionM.map( (item, index) => {
+    return {
+      factionM:item.model,
+      pos:{x:item.view.left, y:item.view.top},
+    };
+  });
+  
+  let doc = JSON.stringify( archive );
+  console.log( "__JSON" );
+  console.log( doc );
+  return doc;
+}
+function saveAllFactionAction() {
+  let archive = _listFactionM.map( (item, index) => {
+    return {
+      factionM:item.model,
+      pos:{x:item.view.left, y:item.view.top},
+    };
+  });
+  let doc = JSON.stringify( archive );
+  let jsonBlob = new Blob([doc],
+                          { type: 'application/javascript;charset=utf-8' });
+  saveAs( jsonBlob, "faction_data.json" );
+}
+function readAllFactionAction(file) {
+  // Check right type (application/json)
+  if (file.type && file.type.indexOf( 'application/json' ) === -1) {
+    alert( "File "+file.name+" is not JSON file" );
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener( 'load', (event) => {
+    console.log( "__READ loaded" );
+    console.log( reader.result );
+    populateFactionFromJSON( reader.result );
+  });
+  reader.addEventListener('progress', (event) => {
+    if (event.loaded && event.total) {
+      const percent = (event.loaded / event.total) * 100;
+      console.log(`__READ Progress: ${Math.round(percent)}`);
+    }
+  });
+  reader.readAsText(file); // when finished, will throw 'load'
+}
+function populateFactionFromJSON( doc ) {
+  let archive = JSON.parse( doc );
+  archive.forEach( (item,index) => {
+    console.log( "["+index+"]=",item );
+    addFactionAction( item.factionM, item.pos );
+  });
 }
 // *********************************************************** END - ListFaction
   
@@ -283,7 +353,7 @@ const handleDummy = ( obj, pos ) => {
   console.log( "DUMMY", obj, pos );
 }
 var _factionContextMenu = [
-  {label:"Edit", cbk::askEditFactionM},
+  {label:"Edit", cbk:askEditFactionM},
   {label:"TODONew Relation", cbk:handleDummy},
   {label:"<hr>",cbk:null}, // separator
   {label: "TodoDelete", cbk:handleDummy},
@@ -400,7 +470,16 @@ canvas.on( 'mouse:down', function (opt) {
 // ********************************************************************* Buttons
 function btnInfo() {
   console.log( "__Factions ("+_listFactionM.length+")" );
+  console.log( _listFactionM );
   _listFactionM.forEach( (factionM) => {
     console.log( factionM.model.strDisplay() )
   });
-};
+  showAllFactionAction();
+}
+function btnSave() {
+  saveAllFactionAction();
+}
+function btnLoad(event) {
+  console.log( "__Load e=",event );
+  readAllFactionAction( event.target.files[0] );
+}
