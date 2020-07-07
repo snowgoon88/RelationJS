@@ -18,6 +18,7 @@ bodyElement.addEventListener( 'keyup', function (event) {
     //console.log( "  ESC" );
     displayPopup( false );
     removeContextMenuC();
+    abortDrawArrow();
   }
 });
 
@@ -65,16 +66,23 @@ function setFactionFunctor (cbk) {
 // ******************************************************************** FactionF
 // *****************************************************************************
 // require: fabric.js
+// IText has NO border (the border is only when selected)
+var _colHiglightRGBA = "rgba( 255, 0, 0, 0.2)";
 function addFactionF( factionM, pos, colorRGB ) {
   let colRGBA = 'rgba( '+colorRGB[0]+', '+colorRGB[1]+', '+colorRGB[2]+', 0.2)';
   var labelF = new fabric.IText( 'F'+factionM.id+': '+factionM.name, {
     id: factionM.id,
+    type: 'FactionF',
+    originX: 'center',
+    originY: 'center',
     left: pos.x,
     top: pos.y,
     fontSize: 20,
     fontWeight: 'bold',
     underline: 'true',
     textBackgroundColor: colRGBA,
+    copyTextBackgroundColor: colRGBA,
+    highlightBackgroundColor: _colHiglightRGBA,
     hasRotatingPoint: false,
     lockRotation: true,
     lockScalingX: true,
@@ -84,6 +92,16 @@ function addFactionF( factionM, pos, colorRGB ) {
     padding: 10,
     // IText
     editable: false,
+  });
+  labelF.on( 'mouseover', function (opt) {
+    console.log( 'MOver' );
+    labelF.set( {'textBackgroundColor': labelF.highlightBackgroundColor} );
+    canvas.requestRenderAll();
+  });
+  labelF.on( 'mouseout', function (opt) {
+    console.log( 'MOut' );
+    labelF.set( {'textBackgroundColor': labelF.copyTextBackgroundColor} );
+    canvas.requestRenderAll();
   });
   canvas.add( labelF );
   
@@ -337,12 +355,18 @@ function askNewFactionM( x, y ) {
   setFactionHandle( new FactionM( -1, 'faction_name' ), {x: x, y:y}, "add" );
   displayPopup( true );
 }
-function askEditFactionM( factionM, pos ) {
+function askEditFactionL( factionIDX, pos ) {
   console.log( 'askE',pos );
   popupElement.style.left = pos.x + 'px';
   popupElement.style.top = pos.y + 'px';
-  setFactionHandle( factionM, pos, "edit", );
+  setFactionHandle( _listFactionM[factionIDX].model, pos, "edit", );
   displayPopup( true );
+}
+function startRelationFromFactionL( factionIDX, posP ) {
+  console.log( 'askNRFF', posP );
+  // need to find FactionF related to this factionM
+  let factionF = _listFactionM[factionIDX].view;
+  startDrawArrow( factionF, posP );
 }
 // *************************************************************** END - Actions
 
@@ -353,8 +377,8 @@ const handleDummy = ( obj, pos ) => {
   console.log( "DUMMY", obj, pos );
 }
 var _factionContextMenu = [
-  {label:"Edit", cbk:askEditFactionM},
-  {label:"TODONew Relation", cbk:handleDummy},
+  {label:"Edit", cbk:askEditFactionL},
+  {label:"TODONew Relation", cbk:startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
   {label: "TodoDelete", cbk:handleDummy},
 ];
@@ -375,7 +399,7 @@ const FactionMenu = (props) => {
         key={index}
         onClick={() =>  {
           removeContextMenuC();
-          item.cbk(props.factionM, props.pos)
+          item.cbk(props.factionIDX, props.pos)
         }}
       >
         {item.label}
@@ -408,8 +432,8 @@ function displayContextMenu( flag ) {
 }
 
 var _contextMenuE;
-function showContextMenuC( factionM, x, y ) {
-  console.log( "showContextMenuC",factionM,x,y );
+function showContextMenuC( factionIDX, x, y ) {
+  console.log( "showContextMenuC",factionIDX,x,y );
   _contextMenuE = document.createElement( "DIV" );
   contextMenuE.appendChild( _contextMenuE );
   _contextMenuE.innerHTML = "CMenu at "+x+"px, ",y+" px";
@@ -419,7 +443,7 @@ function showContextMenuC( factionM, x, y ) {
 
   ReactDOM.render(
     <FactionMenu
-      factionM={factionM}
+      factionIDX={factionIDX}
       pos={{x:x, y:y}}
       items={_factionContextMenu}
     />,
@@ -434,24 +458,102 @@ function removeContextMenuC() {
 // ************************************************************ END Context Menu
 
 // *****************************************************************************
+// ******************************************************************* DrawArrow
+// *****************************************************************************
+var _stateDA = "none"; // none | drawing
+var _srcFDA;
+var _lineDA;
+function startDrawArrow( srcF, mouseP ) {
+  _stateDA = "drawing";
+  // Create a new line from srcF.left/top to mouseP.x/y
+  _lineDA = new fabric.Line( [srcF.left, srcF.top, mouseP.x, mouseP.y ], {
+    stroke: 'red',
+    selectable: false,
+  });
+  canvas.add( _lineDA );
+}
+function updateDrawArrow( mouseP ) {
+  // Update line to mouseP.x/y
+  _lineDA.set( {'x2': mouseP.x, 'y2': mouseP.y} );
+  //_lineDA.setCoords();
+  //_lineDA.set('dirty', true);
+  canvas.requestRenderAll();
+}
+function abortDrawArrow() {
+  console.log( "abortDA" );
+  if (_stateDA === "drawing" ) {
+    _stateDA = "none";
+    canvas.remove( _lineDA );
+  }
+}
+function endDrawArrow( itemF ) {
+  console.log( "endDA", itemF );
+  // check it is a Faction
+  if (itemF.type && itemF.type === "FactionF" ) {
+    _stateDA = "none";
+    // Remove line
+    canvas.remove( _lineDA );
+    // create new relation
+    console.log( "TODO createNewRelation" );
+  }
+  else {
+    return abortDrawArrow();
+  }
+}
+function isDrawArrow() {
+  return _stateDA === "drawing";
+}
+// *************************************************************** END DrawArrow
+
+// *****************************************************************************
 // ************************************************************* Fabric Callback
 // *****************************************************************************
 // Require: Action, fabric
 canvas.on( 'mouse:down', function (opt) {
-  //console.log( 'E',opt );
+  console.log( 'D',opt );
+  if (opt.e.button === 0) {
+    if (opt.target === null) {
+      // while drawingArrow
+      if (isDrawArrow()) {
+        console.log( "ED 1 display null" );
+        abortDrawArrow();
+        return;
+      }
+    }
+    else {
+      // while drawingArrow
+      if (isDrawArrow()) {
+        console.log( "ED 1 display target" );
+        endDrawArrow( opt.target );
+        return
+      }
+    }
+  }
   // RightClick
   if (opt.e.button === 2) {
     if (opt.target === null) {
+      // while drawingArrow
+      if (isDrawArrow()) {
+        console.log( "ED 2 display null" );
+        abortDrawArrow();
+        return;
+      }
       //use mouseEvent to know absolute position
       askNewFactionM( opt.e.x, opt.e.y );
       //opt.e.preventDefault(); // no propagation of mouse event
       //opt.e.stopPropagation();
     }
     else {
+      // while drawingArrow
+      if (isDrawArrow()) {
+        console.log( "ED 2 display target" );
+        endDrawArrow( opt.target );
+        return
+      }
       // console.log( "RC: ",opt );
       // console.log( "  F:",_listFaction[opt.target.id] );
       //askEditFactionM( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y );
-      showContextMenuC( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y);
+      showContextMenuC( opt.target.id, opt.e.x, opt.e.y);
     }
   }
   /* if (event.button === 2) {
@@ -463,6 +565,22 @@ canvas.on( 'mouse:down', function (opt) {
    *   
    * } */
 });
+canvas.on( 'mouse:move', function (opt) {
+  //console.log( 'M', opt );
+  if (isDrawArrow()) {
+    console.log( "M udateDrawArrow", opt.absolutePointer );
+    updateDrawArrow( opt.absolutePointer);
+  }
+});
+/* canvas.on( 'mouse:up', function (opt) {
+ *   //console.log( 'U', opt );
+ *   if (opt.e.button === 2) {
+ *     if (_stateDA === "drawing") {
+ *       console.log( "U endDrawArrow" );
+ *       _stateDA = "none";
+ *     }
+ *   }
+ * });*/
 // ******************************************************* End - Fabric Callback
 
 
@@ -485,3 +603,4 @@ function btnLoad(event) {
   console.log( "__Load e=",event );
   readAllFactionAction( event.target.files[0] );
 }
+// ***************************************************************** END Buttons

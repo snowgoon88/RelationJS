@@ -1,4 +1,5 @@
 * Bug : cG bouge pas dans [[file:src/basic_fabric.jsx::214]]
+* _CURRENT_ : make new relation [[relationArrow]]
 * [4/5] App
 ** DONE basic test example in nav https://js.cytoscape.org/#getting-started
 ** DONE basic react: test_react.html
@@ -37,6 +38,7 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 **** TODO [2/4] Faction
 ***** DONE Edit
 ***** TODO New Relation
+<<relationArrow>> sait choisir src and dest => créer un Relation
 ***** DONE ----
 ***** TODO Delete
 *** Edit
