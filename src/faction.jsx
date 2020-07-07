@@ -65,7 +65,7 @@ function setFactionFunctor (cbk) {
 // *****************************************************************************
 // ******************************************************************** FactionF
 // *****************************************************************************
-// require: fabric.js
+// require: fabric.js, canvas
 // IText has NO border (the border is only when selected)
 var _colHiglightRGBA = "rgba( 255, 0, 0, 0.2)";
 function addFactionF( factionM, pos, colorRGB ) {
@@ -313,7 +313,171 @@ function populateFactionFromJSON( doc ) {
   });
 }
 // *********************************************************** END - ListFaction
+
+// *****************************************************************************
+// ******************************************************************* RelationM
+// *****************************************************************************
+// require: 
+class RelationM {
+  constructor( id, name, srcFactionM, destFactionM ) {
+    this.id = id;
+    this.name = name;
+    this.srcM = srcFactionM;
+    this.destM = destFactionM;
+    this.type = 'RelationM';
+  }
+  strDisplay() {
+    let display = 'R['+this.id+']: '+this.name;
+    return display;
+  }
+}
+// ***** to Manage Faction.id
+var _idmax_relation = 0;
+function makeNewRelationM( name, srcFactionM, destFactionM ) {
+  var nr = new RelationM( _idmax_relation, name, srcFactionM, destFactionM );
+  _idmax_relation += 1;
+
+  return nr;
+}
+// ************************************************************* END - RelationM
+
+// *****************************************************************************
+// ************************************************************************* Vec
+// *****************************************************************************
+class Vec {
+  constructor( x, y ) {
+    this.x = x;
+    this.y = y;
+  }
+  norm() {
+    return Math.sqrt( this.x * this.x + this.y * this.y );
+  }
+  minus( v ) {
+    return new Vec( this.x - v.x, this.y - v.y );
+  }
+  dot( v ) {
+    return this.x * v.x + this.y * v.y;
+  }
+  perp() {
+    return new Vec( -this.y, this.x );
+  }
+  scalar( k ) {
+    return new Vec( k * this.x, k * this.y );
+  }
+}
+// ******************************************************************* END - Vec
+
+// *****************************************************************************
+// ******************************************************************* RelationF
+// *****************************************************************************
+// require: fabric.js, canvas, Vector
+// A RelationF is made of:
+// - pathF [fabric.Path] : the bezier path
+// - headF [fabric.Triangle] : arrow head
+// - ctrlP [fabric.Circle] : ctrl Point for the path
+// - midpointP [???] : point a the middle abscisse of the path
+// - label [???] : the text, near the mid point
+class RelationF {
+  constructor( srcF, destF, colRGB ) {
+    // default path is 100,100 --<150,90>--> 200,100
+    this.srcPt =  new Vec( 100, 100 );
+    this.ctrlPt = new Vec( 150,  80 );
+    this.destPt = new Vec( 200, 100 );
+
+    // FabricJS elements
+    this.pathF = new fabric.Path( 'M100,100 Q150,80 200,100', {
+      stroke: colRGB,
+      fill: false,
+      selectable: true,
+      perPixelTargetFind: true,
+      hasControls: false,
+      hasRotatingPoint: false,
+      lockRotation: true,
+      lockMovementX: true,
+      lockMovementY: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockSkewingX: true,
+      lockSkewingY: true,
+    });
+    this.ctrlF = new fabric.Circle({
+      originX: 'center',
+      originY: 'center',
+      left: 150,
+      top: 80,
+      radius: 10,
+      stroke: colRGB,
+      fill: colRGB,
+      selectable: true,
+      hasControls: false,
+      hasRotatingPoint: false,
+      lockRotation: true,
+      lockMovementX: false,
+      lockMovementY: false,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockSkewingX: true,
+      lockSkewingY: true,
+    });
+    
+    this._updateWithNewEnds( srcF, destF );
+    canvas.add( this.pathF );
+    canvas.add( this.ctrlF );
+  }
   
+  // when src and/or dest have moved
+  _updateWithNewEnds( srcF, destF ) {
+    let srcNew =  new Vec( srcF.left,  srcF.top );
+    let destNew = new Vec( destF.left, destF.top);
+    
+    let srcCtrlOld = this.ctrlPt.minus( this.srcPt );
+    let srcDestOld = this.destPt.minus( this.srcPt );
+    let normOld = srcDestOld.norm();
+
+    // Old projection of ctrlPt on local frame (src->dest)
+    let ctrlXRatio = srcCtrlOld.dot( srcDestOld ) / (normOld * normOld);
+    let ctrlYRatio = srcCtrlOld.dot( srcDestOld.perp()) / (normOld * normOld);
+
+    // Actual projection
+    let srcDest = destNew.minus( srcNew ); 
+    let updCtrlX = srcDest.scalar( ctrlXRatio );
+    let updCtrlY = srcDest.perp().scalar( ctrlYRatio );
+    this.ctrlPt = new Vec( srcNew.x + updCtrlX.x + updCtrlY.x,
+                           srcNew.y + updCtrlX.y + updCtrlY.y );
+
+    // update ControlPointF
+    this.ctrlF.set( {'left': this.ctrlPt.x, 'top': this.ctrlPt.y} );
+    this.ctrlF.setCoords();
+
+    // update PathF
+    this.srcPt = srcNew;
+    this.destPt = destNew;
+
+    this.pathF.set( 'path', this._toPathArray() );
+    let dims = this.pathF._calcDimensions();
+    this.pathF.set( {
+      width: dims.width,
+      height: dims.height,
+      left: dims.left,
+      top: dims.top,
+      pathOffset: {
+        x: dims.width / 2 + dims.left,
+        y: dims.height / 2 + dims.top
+      },
+      dirty: true
+    });
+    this.pathF.setCoords();
+  }
+  // build a proper SVG Array for path
+  _toPathArray() {
+    let path = [];
+    path.push( ["M", this.srcPt.x, this.srcPt.y] );
+    path.push( ["Q", this.ctrlPt.x, this.ctrlPt.y, this.destPt.x, this.destPt.y] );
+    return path;
+  }
+}
+// ************************************************************* END - RelationF
+
 // *****************************************************************************
 // ********************************************************************* Actions
 // *****************************************************************************
@@ -461,10 +625,11 @@ function removeContextMenuC() {
 // ******************************************************************* DrawArrow
 // *****************************************************************************
 var _stateDA = "none"; // none | drawing
-var _srcFDA;
+var _srcFDA = null;
 var _lineDA;
 function startDrawArrow( srcF, mouseP ) {
   _stateDA = "drawing";
+  _srcFDA = srcF;
   // Create a new line from srcF.left/top to mouseP.x/y
   _lineDA = new fabric.Line( [srcF.left, srcF.top, mouseP.x, mouseP.y ], {
     stroke: 'red',
@@ -483,6 +648,7 @@ function abortDrawArrow() {
   console.log( "abortDA" );
   if (_stateDA === "drawing" ) {
     _stateDA = "none";
+    _srcFDA = null;
     canvas.remove( _lineDA );
   }
 }
@@ -495,6 +661,8 @@ function endDrawArrow( itemF ) {
     canvas.remove( _lineDA );
     // create new relation
     console.log( "TODO createNewRelation" );
+    // TPDO TMP
+    var newR = new RelationF( _srcFDA, itemF, 'red' );
   }
   else {
     return abortDrawArrow();
