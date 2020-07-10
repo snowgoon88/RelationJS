@@ -40,6 +40,8 @@ class FactionM {
   constructor( id, name ) {
     this.id = id;
     this.name = name;
+    this.type = 'FactionM';
+    this.viewF = null;      // FabricJS view
   }
   strDisplay() {
     let display = 'F['+this.id+']: '+this.name;
@@ -72,7 +74,7 @@ function addFactionF( factionM, pos, colorRGB ) {
   let colRGBA = 'rgba( '+colorRGB[0]+', '+colorRGB[1]+', '+colorRGB[2]+', 0.2)';
   var labelF = new fabric.IText( 'F'+factionM.id+': '+factionM.name, {
     id: factionM.id,
-    type: 'FactionF',
+    model: factionM,
     originX: 'center',
     originY: 'center',
     left: pos.x,
@@ -93,6 +95,8 @@ function addFactionF( factionM, pos, colorRGB ) {
     // IText
     editable: false,
   });
+  factionM.viewF = labelF;
+  
   labelF.on( 'mouseover', function (opt) {
     console.log( 'MOver' );
     labelF.set( {'textBackgroundColor': labelF.highlightBackgroundColor} );
@@ -103,9 +107,25 @@ function addFactionF( factionM, pos, colorRGB ) {
     labelF.set( {'textBackgroundColor': labelF.copyTextBackgroundColor} );
     canvas.requestRenderAll();
   });
+  // When multiple Objects are selected (like two FactionF)
+  // the individual elements DO NOT receive 'moved' or 'modified' event.
+  // We have to operate on canvas directly.
+  /* labelF.on( 'modified', function (opt) {
+   *   console.log( 'EMod', opt );
+   *   let allRelationM = findRelationMWith( opt.target.model );
+   *   allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
+   * });
+   * labelF.on( 'moved', (opt) => {
+   *    console.log( 'moved ', labelF.model.name ); 
+   * }); */
   canvas.add( labelF );
   
   return labelF;                               
+}
+function movedFactionF( itemF ) {
+  console.log( 'movedFactionF ', itemF.model.name );
+  let allRelationM = findRelationMWith( itemF.model );
+  allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
 }
 function editFactionF( labelF, factionM ) {
   labelF.set( {'text' : 'F'+factionM.id+': '+factionM.name } );
@@ -233,6 +253,7 @@ var _listFactionM = [];
 function newFactionAction( factionM, pos ) {
   var nf = makeNewFactionM( factionM.name );
   var newFab = addFactionF( nf, pos, [0,0,255] );
+  nf.viewF = newFab;
   _listFactionM.push( {model:nf, view:newFab} );
   displayPopup( false );
 }
@@ -325,6 +346,7 @@ class RelationM {
     this.srcM = srcFactionM;
     this.destM = destFactionM;
     this.type = 'RelationM';
+    this.viewF = null;
   }
   strDisplay() {
     let display = 'R['+this.id+']: '+this.name;
@@ -365,6 +387,61 @@ class Vec {
     return new Vec( k * this.x, k * this.y );
   }
 }
+// Hyp : itemF is centered on {left,top}
+function intersectRectVec( itemF, vec ) {
+  let dx, dy;
+
+  if (Math.abs( vec.y ) < Number.EPSILON) {
+    if (vec.x > 0) {
+      return new Vec( itemF.aCoords.br.x, itemF.top );
+    }
+    else {
+      return new Vec( itemF.aCoords.bl.x, itemF.top );
+    }
+  }
+
+  // right quadrant
+  if (vec.x > Number.EPSILON) {
+    dx = (itemF.aCoords.br.x - itemF.left);
+    dy = (dx / vec.x) * vec.y;
+    // right "down" quadrant
+    if (dy > (itemF.aCoords.br.y - itemF.top)) {
+      dy = (itemF.aCoords.br.y - itemF.top);
+      dx = (dy / vec.y) * vec.x;
+    }
+    // right "up" quadrant
+    else if (dy < (itemF.aCoords.tr.y - itemF.top)) {
+      dy = (itemF.aCoords.tr.y - itemF.top);
+      dx = (dy / vec.y) * vec.x;
+    }
+  }
+  // left quadrant
+  else if (vec.x < -Number.EPSILON) {
+    dx = (itemF.aCoords.bl.x - itemF.left);
+    dy = (dx / vec.x) * vec.y;
+    // left "down" quadrant
+    if (dy > (itemF.aCoords.br.y - itemF.top)) {
+      dy = (itemF.aCoords.br.y - itemF.top);
+      dx = (dy / vec.y) * vec.x;
+    }
+    // left "up" quadrant
+    else if (dy < (itemF.aCoords.tr.y - itemF.top)) {
+      dy = (itemF.aCoords.tr.y - itemF.top);
+      dx = (dy / vec.y) * vec.x;
+    }
+  }
+  // vec.x is null
+  else {
+    if (vec.y > 0) {
+      return new Vec( itemF.left, itemF.aCoords.br.y );
+    }
+    else {
+      return new Vec( itemF.left, itemF.aCoords.tr.y );
+    }
+  }
+  
+  return new Vec( itemF.left+dx, itemF.top+dy );
+}
 // ******************************************************************* END - Vec
 
 // *****************************************************************************
@@ -378,7 +455,8 @@ class Vec {
 // - midpointP [???] : point a the middle abscisse of the path
 // - label [???] : the text, near the mid point
 class RelationF {
-  constructor( srcF, destF, colRGB ) {
+  constructor( relationM, colRGB ) {
+    this.model = relationM;
     // default path is 100,100 --<150,90>--> 200,100
     this.srcPt =  new Vec( 100, 100 );
     this.ctrlPt = new Vec( 150,  80 );
@@ -420,13 +498,77 @@ class RelationF {
       lockSkewingY: true,
     });
     
+    this.headF = new fabric.Triangle({
+      originX: 'center',
+      left: 10,
+      //originY: 'center',
+      top: 10,
+      width: 12,
+      height: 20,
+      stroke: colRGB,
+      fill: colRGB,
+      selectable: false,
+      hasControls: false,
+      hasRotatingPoint: false,
+      lockRotation: true,
+      lockMovementX: true,
+      lockMovementY: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockSkewingX: true,
+      lockSkewingY: true,
+    });
+    
+    let srcF = relationM.srcM.viewF;
+    let destF = relationM.destM.viewF;
     this._updateWithNewEnds( srcF, destF );
+
+    this.ctrlF.on( 'modified', (opt) => {
+      console.log( 'modCtrl', opt );
+      this.updateCtrl();
+    });
+    this.ctrlF.on( 'deselected', (opt) => {
+      console.log( 'des opt=', opt );
+      this.setInactive();
+    });
+    this.pathF.on( 'selected', (opt) => {      
+      console.log( 'selPath opt=',opt );
+      this.setActive();
+    });
+
     canvas.add( this.pathF );
+    canvas.add( this.headF );
     canvas.add( this.ctrlF );
+  }
+  // call when src or/and dest have moved
+  updateEnds() {
+    this._updateWithNewEnds( this.model.srcM.viewF, this.model.destM.viewF );
+  }
+  updateCtrl() {
+    this.ctrlPt = new Vec( this.ctrlF.left, this.ctrlF.top );
+    this.updatePath();
+  }
+  // set as the active Object
+  setActive() {
+    this.ctrlF.set( 'selectable', true );
+    this.ctrlF.set( 'visible', true );
+    canvas.setActiveObject( this.ctrlF );
+  }
+  setInactive() {
+    console.log( 'Inactive' );
+    this.ctrlF.set( 'selectable', false );
+    this.ctrlF.set( 'visible', false );
   }
   
   // when src and/or dest have moved
   _updateWithNewEnds( srcF, destF ) {
+    console.log( '  update', this.model.name );
+    console.log( '  srcF', srcF );
+    console.log( '    co', srcF.calcCoords() );
+    console.log( '  destF', destF );
+    console.log( '    co', destF.calcCoords() );
+    destF.setCoords();
+    console.log( '  destF', destF );
     let srcNew =  new Vec( srcF.left,  srcF.top );
     let destNew = new Vec( destF.left, destF.top);
     
@@ -449,11 +591,31 @@ class RelationF {
     this.ctrlF.set( {'left': this.ctrlPt.x, 'top': this.ctrlPt.y} );
     this.ctrlF.setCoords();
 
-    // update PathF
+    // update EndPoints
     this.srcPt = srcNew;
     this.destPt = destNew;
-
-    this.pathF.set( 'path', this._toPathArray() );
+    this.updatePath();
+  }
+  // call to recompute path
+  updatePath() {
+    // update PathF and arrowHead
+    // taking into account the BBOX
+    let srcF = this.model.srcM.viewF;
+    let destF = this.model.destM.viewF;
+    
+    // update arrowHead
+    let vecSC = this.ctrlPt.minus( this.srcPt );
+    let srcCoord = intersectRectVec( srcF, vecSC );
+    let vecDC = this.ctrlPt.minus( this.destPt );
+    let destCoord= intersectRectVec( destF, vecDC );
+    let arrowAngle =  Math.atan2( -vecDC.y, -vecDC.x );
+    arrowAngle += Math.PI / 2.0;
+    arrowAngle *= 180.0 / Math.PI;
+    this.headF.set( {'left': destCoord.x, 'top': destCoord.y,
+                     'angle': arrowAngle} );
+    this.headF.setCoords();
+    
+    this.pathF.set( 'path', this._toPathArray( srcCoord, destCoord ) );
     let dims = this.pathF._calcDimensions();
     this.pathF.set( {
       width: dims.width,
@@ -469,14 +631,45 @@ class RelationF {
     this.pathF.setCoords();
   }
   // build a proper SVG Array for path
-  _toPathArray() {
+  _toPathArray( srcV, destV) {
     let path = [];
-    path.push( ["M", this.srcPt.x, this.srcPt.y] );
-    path.push( ["Q", this.ctrlPt.x, this.ctrlPt.y, this.destPt.x, this.destPt.y] );
+    path.push( ["M", srcV.x, srcV.y] );
+    path.push( ["Q", this.ctrlPt.x, this.ctrlPt.y, destV.x, destV.y] );
     return path;
   }
 }
 // ************************************************************* END - RelationF
+
+// *****************************************************************************
+// *************************************************************** ListRelationM
+// *****************************************************************************
+var _listRelationM = [];
+function newRelationAction( srcF, destF ) {
+  // check different items
+  if (srcF.model === destF.model) {
+    alert( "No Relation with same Element" );
+    return;
+  }
+  var nrM = makeNewRelationM( 'TODOmakeR', srcF.model, destF.model );
+  var nrF = new RelationF( nrM, 'red' );
+  nrM.viewF = nrF;
+  _listRelationM.push( nrM );
+
+  // deselect everything except new relation
+  canvas.discardActiveObject();
+  nrF.setActive();
+  
+}
+function findRelationMWith( itemM ) {
+  let result = [];
+  for( let idx=0; idx < _listRelationM.length; idx++ ) {
+    let relationM = _listRelationM[idx];
+    if (relationM.srcM === itemM || relationM.destM === itemM ) {
+      result.push( relationM );
+    }
+  }
+  return result;
+}
 
 // *****************************************************************************
 // ********************************************************************* Actions
@@ -655,14 +848,14 @@ function abortDrawArrow() {
 function endDrawArrow( itemF ) {
   console.log( "endDA", itemF );
   // check it is a Faction
-  if (itemF.type && itemF.type === "FactionF" ) {
+  if (itemF.model && itemF.model.type === "FactionM" ) {
     _stateDA = "none";
     // Remove line
     canvas.remove( _lineDA );
     // create new relation
     console.log( "TODO createNewRelation" );
     // TPDO TMP
-    var newR = new RelationF( _srcFDA, itemF, 'red' );
+    newRelationAction( _srcFDA, itemF );
   }
   else {
     return abortDrawArrow();
@@ -740,6 +933,26 @@ canvas.on( 'mouse:move', function (opt) {
     updateDrawArrow( opt.absolutePointer);
   }
 });
+
+canvas.on( 'object:moved', (opt) => {
+  // opt.target is an ActiveSelection or a 'rawObject'
+  console.log( 'object:moved', opt );
+  //console.log( '  moved ', opt.target.type );
+  //console.log( '  moved ', typeof(opt.target) );
+
+  if (opt.target.type === "activeSelection" ) {
+    console.log( '  moving activeSelection', opt.target );
+    opt.target.forEachObject( (itemF, idx) => {
+      if (itemF.model.type === "FactionM") {
+        movedFactionF( itemF );
+      }
+    });
+  }
+  else if (opt.target.model && opt.target.model.type === "FactionM") {
+    movedFactionF( opt.target );
+  }
+});
+  
 /* canvas.on( 'mouse:up', function (opt) {
  *   //console.log( 'U', opt );
  *   if (opt.e.button === 2) {

@@ -40,9 +40,9 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 ***** TODO New Relation
 <<relationArrow>> sait choisir src and dest => créer un Relation
 - créer un RelationF  : OK
-- triangle            :
-- liste des Relations : 
-- update si mvt End   :
+- triangle            : OK
+- liste des Relations : bof
+- update si mvt End   : OK
 - update si mvt Ctrl  :
 - label               :
 ***** DONE ----
