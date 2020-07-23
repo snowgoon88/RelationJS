@@ -387,56 +387,61 @@ class Vec {
     return new Vec( k * this.x, k * this.y );
   }
 }
-// Hyp : itemF is centered on {left,top}
+// Hyp : itemF is centered on {left,top}, itemF has width, height
+//     : top is bigger when going down
 function intersectRectVec( itemF, vec ) {
   let dx, dy;
+  let maxX = itemF.left + itemF.width/2;
+  let minX = itemF.left - itemF.width/2;
+  let maxY = itemF.top + itemF.height/2;
+  let minY = itemF.top - itemF.height/2;
 
   if (Math.abs( vec.y ) < Number.EPSILON) {
     if (vec.x > 0) {
-      return new Vec( itemF.aCoords.br.x, itemF.top );
+      return new Vec( maxX, itemF.top );
     }
     else {
-      return new Vec( itemF.aCoords.bl.x, itemF.top );
+      return new Vec( minX, itemF.top );
     }
   }
 
   // right quadrant
   if (vec.x > Number.EPSILON) {
-    dx = (itemF.aCoords.br.x - itemF.left);
+    dx = (maxX - itemF.left);
     dy = (dx / vec.x) * vec.y;
     // right "down" quadrant
-    if (dy > (itemF.aCoords.br.y - itemF.top)) {
-      dy = (itemF.aCoords.br.y - itemF.top);
+    if (dy > (maxY - itemF.top)) {
+      dy = (maxY - itemF.top);
       dx = (dy / vec.y) * vec.x;
     }
     // right "up" quadrant
-    else if (dy < (itemF.aCoords.tr.y - itemF.top)) {
-      dy = (itemF.aCoords.tr.y - itemF.top);
+    else if (dy < (minY - itemF.top)) {
+      dy = (minY - itemF.top);
       dx = (dy / vec.y) * vec.x;
     }
   }
   // left quadrant
   else if (vec.x < -Number.EPSILON) {
-    dx = (itemF.aCoords.bl.x - itemF.left);
+    dx = (minX - itemF.left);
     dy = (dx / vec.x) * vec.y;
     // left "down" quadrant
-    if (dy > (itemF.aCoords.br.y - itemF.top)) {
-      dy = (itemF.aCoords.br.y - itemF.top);
+    if (dy > (maxY - itemF.top)) {
+      dy = (maxY - itemF.top);
       dx = (dy / vec.y) * vec.x;
     }
     // left "up" quadrant
-    else if (dy < (itemF.aCoords.tr.y - itemF.top)) {
-      dy = (itemF.aCoords.tr.y - itemF.top);
+    else if (dy < (minY - itemF.top)) {
+      dy = (minY - itemF.top);
       dx = (dy / vec.y) * vec.x;
     }
   }
   // vec.x is null
   else {
     if (vec.y > 0) {
-      return new Vec( itemF.left, itemF.aCoords.br.y );
+      return new Vec( itemF.left, maxY );
     }
     else {
-      return new Vec( itemF.left, itemF.aCoords.tr.y );
+      return new Vec( itemF.left, minY );
     }
   }
   
@@ -569,8 +574,10 @@ class RelationF {
     console.log( '    co', destF.calcCoords() );
     destF.setCoords();
     console.log( '  destF', destF );
-    let srcNew =  new Vec( srcF.left,  srcF.top );
-    let destNew = new Vec( destF.left, destF.top);
+    let posSrcF = getPosF( srcF );
+    let posDestF = getPosF( destF );
+    let srcNew =  new Vec( posSrcF.left,  posSrcF.top );
+    let destNew = new Vec( posDestF.left, posDestF.top);
     
     let srcCtrlOld = this.ctrlPt.minus( this.srcPt );
     let srcDestOld = this.destPt.minus( this.srcPt );
@@ -602,12 +609,14 @@ class RelationF {
     // taking into account the BBOX
     let srcF = this.model.srcM.viewF;
     let destF = this.model.destM.viewF;
+    let posSrcF = getPosF( srcF );
+    let posDestF = getPosF( destF );
     
     // update arrowHead
     let vecSC = this.ctrlPt.minus( this.srcPt );
-    let srcCoord = intersectRectVec( srcF, vecSC );
+    let srcCoord = intersectRectVec( posSrcF, vecSC );
     let vecDC = this.ctrlPt.minus( this.destPt );
-    let destCoord= intersectRectVec( destF, vecDC );
+    let destCoord= intersectRectVec( posDestF, vecDC );
     let arrowAngle =  Math.atan2( -vecDC.y, -vecDC.x );
     arrowAngle += Math.PI / 2.0;
     arrowAngle *= 180.0 / Math.PI;
@@ -867,6 +876,26 @@ function isDrawArrow() {
 // *************************************************************** END DrawArrow
 
 // *****************************************************************************
+// **************************************************************** Fabric utils
+// *****************************************************************************
+// Compute position of a FabricItem, even if nested in a group/selection.
+// Requirement: group.originX: left, group.originY. top
+//
+// Returns {left, top, width, height}
+function getPosF( item ) {
+  let left = item.left;
+  let top = item.top;
+  // in group ??
+  if (item.group) {
+    let gPos = getPosF( item.group );
+    left += gPos.left + item.group.width/2;
+    top += gPos.top + item.group.height/2;
+  }
+  return {left:left, top:top, width:item.width, height:item.height };
+}
+// ************************************************************ END Fabric Utils
+
+// *****************************************************************************
 // ************************************************************* Fabric Callback
 // *****************************************************************************
 // Require: Action, fabric
@@ -917,14 +946,10 @@ canvas.on( 'mouse:down', function (opt) {
       showContextMenuC( opt.target.id, opt.e.x, opt.e.y);
     }
   }
-  /* if (event.button === 2) {
-   *   console.log("right click");
-   *   console.log( "X=",opt.e.x );
-   *   popupElement.style.left = opt.e.x + 'px';
-   *   popupElement.style.top = opt.e.y + 'px';
-   *   //askNewFaction( opt.e.x, opt.e.y );
-   *   
-   * } */
+  // Middle click
+  if (opt.e.button === 1) {
+    alert( "X="+opt.e.x+", Y="+opt.e.y );
+  }
 });
 canvas.on( 'mouse:move', function (opt) {
   //console.log( 'M', opt );
@@ -952,7 +977,7 @@ canvas.on( 'object:moved', (opt) => {
     movedFactionF( opt.target );
   }
 });
-  
+
 /* canvas.on( 'mouse:up', function (opt) {
  *   //console.log( 'U', opt );
  *   if (opt.e.button === 2) {

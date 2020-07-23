@@ -43,8 +43,9 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 - triangle            : OK
 - liste des Relations : bof
 - update si mvt End   : OK
-- update si mvt Ctrl  :
-- label               :
+- update si mvt Ctrl  : OK
+- update si mvt both end : OK
+- label               : 
 ***** DONE ----
 ***** TODO Delete
 *** Edit
