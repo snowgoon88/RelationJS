@@ -56,7 +56,16 @@ function makeNewFactionM( name ) {
 
   return nf;
 }
+function makeNewFactionIdM( id, name ) {
+  if (id < _idmax_faction) {
+    alert( "Cannot make new faction with improper id ("+id+")" );
+    return;
+  }
+  var nf = new FactionM( id, name );
+  _idmax_faction = id+1;
 
+  return nf;
+}
 // ***** to Change the Faction displayed/edited in FactionC
 var setFactionHandle;
 function setFactionFunctor (cbk) {
@@ -267,7 +276,7 @@ function addFactionAction( factionM, pos ) {
     return;
   }
 
-  let newM = new FactionM( factionM.id, factionM.name );
+  let newM = makeNewFactionIdM( factionM.id, factionM.name );
   var newF = addFactionF( newM, pos, [0,0,255] );
   _listFactionM.push( {model:newM, view:newF} );
   displayPopup( false );
@@ -364,7 +373,7 @@ function makeNewRelationM( name, srcFactionM, destFactionM ) {
 // ************************************************************* END - RelationM
 
 // *****************************************************************************
-// ************************************************************************* Vec
+// ******************************************************************* Vec {x,y}
 // *****************************************************************************
 class Vec {
   constructor( x, y ) {
@@ -447,6 +456,18 @@ function intersectRectVec( itemF, vec ) {
   
   return new Vec( itemF.left+dx, itemF.top+dy );
 }
+// Compute the position of a point at absice 'abs' on segment [src,dest]
+function segmentPointVec( srcV, destV, abs ) {
+  let x = srcV.x + abs * (destV.x - srcV.x);
+  let y = srcV.y + abs * (destV.y - srcV.y);
+  return new Vec(x,y);
+}
+// Compute a bezier point with absice 'abs'
+function computeBezierPointVec( srcV, destV, ctrlV, abs ) {
+  let pt1 = segmentPointVec( srcV, ctrlV, abs );
+  let pt2 = segmentPointVec( ctrlV, destV, abs );
+  return segmentPointVec( pt1, pt2, abs );
+}
 // ******************************************************************* END - Vec
 
 // *****************************************************************************
@@ -456,9 +477,9 @@ function intersectRectVec( itemF, vec ) {
 // A RelationF is made of:
 // - pathF [fabric.Path] : the bezier path
 // - headF [fabric.Triangle] : arrow head
-// - ctrlP [fabric.Circle] : ctrl Point for the path
-// - midpointP [???] : point a the middle abscisse of the path
-// - label [???] : the text, near the mid point
+// - ctrlF [fabric.Circle] : ctrl Point for the path
+// - midF [???] : point a the middle abscisse of the path
+// - labelF [fabric.] : the text, near the mid point
 class RelationF {
   constructor( relationM, colRGB ) {
     this.model = relationM;
@@ -466,6 +487,8 @@ class RelationF {
     this.srcPt =  new Vec( 100, 100 );
     this.ctrlPt = new Vec( 150,  80 );
     this.destPt = new Vec( 200, 100 );
+    this.midPt = computeBezierPointVec( this.srcPt, this.destPt,
+                                        this.ctrlPt, 0.5 );
 
     // FabricJS elements
     this.pathF = new fabric.Path( 'M100,100 Q150,80 200,100', {
@@ -523,6 +546,25 @@ class RelationF {
       lockSkewingX: true,
       lockSkewingY: true,
     });
+    this.labelF = new fabric.IText( relationM.id+': '+relationM.name, {
+      originX: 'center',
+      originY: 'center',
+      left: this.midPt.x,
+      top: this.midPt.y,
+      fontSize: 16,
+      fill: colRGB,
+      selectable: false,
+      hasRotatingPoint: false,
+      lockRotation: true,
+      lockScalingX: true,
+      lockSclaingY: true,
+      lockSkewingX: true,
+      lockSkewingY: true,
+      //padding: 10,
+      // IText
+      editable: false,
+  });
+    
     
     let srcF = relationM.srcM.viewF;
     let destF = relationM.destM.viewF;
@@ -544,6 +586,7 @@ class RelationF {
     canvas.add( this.pathF );
     canvas.add( this.headF );
     canvas.add( this.ctrlF );
+    canvas.add( this.labelF );
   }
   // call when src or/and dest have moved
   updateEnds() {
@@ -551,6 +594,8 @@ class RelationF {
   }
   updateCtrl() {
     this.ctrlPt = new Vec( this.ctrlF.left, this.ctrlF.top );
+    this.midPt = computeBezierPointVec( this.srcPt, this.destPt,
+                                        this.ctrlPt, 0.5 );
     this.updatePath();
   }
   // set as the active Object
@@ -601,6 +646,8 @@ class RelationF {
     // update EndPoints
     this.srcPt = srcNew;
     this.destPt = destNew;
+    this.midPt = computeBezierPointVec( this.srcPt, this.destPt,
+                                        this.ctrlPt, 0.5 );
     this.updatePath();
   }
   // call to recompute path
@@ -623,6 +670,9 @@ class RelationF {
     this.headF.set( {'left': destCoord.x, 'top': destCoord.y,
                      'angle': arrowAngle} );
     this.headF.setCoords();
+
+    this.labelF.set( {'left': this.midPt.x, 'top': this.midPt.y } );
+    this.labelF.setCoords();
     
     this.pathF.set( 'path', this._toPathArray( srcCoord, destCoord ) );
     let dims = this.pathF._calcDimensions();

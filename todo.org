@@ -1,4 +1,6 @@
 * Bug : cG bouge pas dans [[file:src/basic_fabric.jsx::214]]
+* [1/1] BUG 
+** DONE Après load factions, create faction has id 0 !! (not max)
 * _CURRENT_ : make new relation [[relationArrow]]
 * [4/5] App
 ** DONE basic test example in nav https://js.cytoscape.org/#getting-started
@@ -31,6 +33,10 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 *** DONE load
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
+** [0/3] Relation
+*** TODO lister
+*** TODO save
+*** TODO load
 ** [0/2] Contextual Menu
 *** TODO [0/1] Menu
 **** [0/0] Background
@@ -45,7 +51,8 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 - update si mvt End   : OK
 - update si mvt Ctrl  : OK
 - update si mvt both end : OK
-- label               : 
+- label               : OK
+- demander label      : 
 ***** DONE ----
 ***** TODO Delete
 *** Edit
