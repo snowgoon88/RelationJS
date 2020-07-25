@@ -47,6 +47,20 @@ class FactionM {
     let display = 'F['+this.id+']: '+this.name;
     return display;
   }
+  toArchive() {
+    var archive = {
+      id: this.id,
+      name: this.name,
+    };
+    if (this.viewF) {
+      archive['viewInfo'] = { pos: {x:this.viewF.left, y:this.viewF.top }};
+    }
+    else {
+      archive['viewInfo'] = null;
+    }
+
+    return archive;
+  }
 }
 // ***** to Manage Faction.id
 var _idmax_faction = 0;
@@ -278,6 +292,7 @@ function addFactionAction( factionM, pos ) {
 
   let newM = makeNewFactionIdM( factionM.id, factionM.name );
   var newF = addFactionF( newM, pos, [0,0,255] );
+  newM.viewF = newF;
   _listFactionM.push( {model:newM, view:newF} );
   displayPopup( false );
 }
@@ -290,18 +305,18 @@ function editFactionAction( factionM ) {
 }
 function showAllFactionAction() {
   // make new array with data to archive
-  let archive = _listFactionM.map( (item, index) => {
+  let archiveFaction = _listFactionM.map( (item, index) => {
     return {
-      factionM:item.model,
-      pos:{x:item.view.left, y:item.view.top},
+      factionM: item.model.toArchive()
     };
   });
-  
-  let doc = JSON.stringify( archive );
+
+  let doc = JSON.stringify( archiveFaction );
   console.log( "__JSON" );
   console.log( doc );
   return doc;
 }
+
 function saveAllFactionAction() {
   let archive = _listFactionM.map( (item, index) => {
     return {
@@ -361,12 +376,40 @@ class RelationM {
     let display = 'R['+this.id+']: '+this.name;
     return display;
   }
+  toArchive() {
+    var archive = {
+      id: this.id,
+      name: this.name,
+      srcId: this.srcM.id,
+      destId: this.destM.id,
+    };
+    if (this.viewF) {
+      archive['viewInfo'] = this.viewF.toArchive();
+    }
+    else {
+      archive['viewInfo'] = null;
+    }
+    
+  return archive;    
+  }
 }
 // ***** to Manage Faction.id
 var _idmax_relation = 0;
 function makeNewRelationM( name, srcFactionM, destFactionM ) {
   var nr = new RelationM( _idmax_relation, name, srcFactionM, destFactionM );
   _idmax_relation += 1;
+
+  return nr;
+}
+function makeNewRelationIdM( id, name, srcFactionM, destFactionM ) {
+  console.log( "makeNewRelation ", id, name, srcFactionM, destFactionM );
+
+  if (id < _idmax_relation) {
+    alert( "Cannot make new relation with improper id ("+id+")" );
+    return;
+  }
+  var nr = new RelationM( id, name, srcFactionM, destFactionM);
+  _idmax_faction = id+1;
 
   return nr;
 }
@@ -563,7 +606,7 @@ class RelationF {
       //padding: 10,
       // IText
       editable: false,
-  });
+    });
     
     
     let srcF = relationM.srcM.viewF;
@@ -587,6 +630,16 @@ class RelationF {
     canvas.add( this.headF );
     canvas.add( this.ctrlF );
     canvas.add( this.labelF );
+  }
+  toArchive() {
+    var archive = {
+      posCtrl: this.ctrlPt,
+    };
+    return archive;
+  }
+  setCtrlPt( ctrlPt ) {
+    this.ctrlPt = new Vec( ctrlPt.x, ctrlPt.y );
+    this._updateWithNewEnds( this.model.srcM.viewF, this.model.destM.viewF );
   }
   // call when src or/and dest have moved
   updateEnds() {
@@ -717,7 +770,28 @@ function newRelationAction( srcF, destF ) {
   // deselect everything except new relation
   canvas.discardActiveObject();
   nrF.setActive();
-  
+}
+function addRelationAction( relationA ) {
+  console.log( "addRelationAction", relationA );
+    if (relationA.id < 0) {
+    alert( "Cannot addRelation with improper id ("+relationA.id+")" );
+    return;
+  }
+  if (_listRelationM[relationA.id]) {
+    alert( "Cannot addRerlation over existing one (id="+relationA.id+")" );
+    return;
+  }
+
+  let srcFactionM = _listFactionM[relationA.srcId].model;
+  let destFactionM = _listFactionM[relationA.destId].model;
+
+  var nrM = makeNewRelationIdM( relationA.id, relationA.name,
+                              srcFactionM, destFactionM );
+  var nrF = new RelationF( nrM, 'red' );
+  nrM.viewF = nrF;
+  nrF.setCtrlPt( relationA.viewInfo.posCtrl );
+  nrF.setInactive(); 
+  _listRelationM.push( nrM );
 }
 function findRelationMWith( itemM ) {
   let result = [];
@@ -729,6 +803,25 @@ function findRelationMWith( itemM ) {
   }
   return result;
 }
+
+function showAllRelationAction() {
+  // make new array with data to archive
+  let archiveRelation = _listRelationM.map( (item, index) => {
+    return {
+      relationM: item.toArchive(),
+    };
+  });
+
+  let doc = JSON.stringify( archiveRelation );
+  console.log( "__JSON" );
+  console.log( doc );
+  return doc;
+}
+
+
+// ********************************************************* END - ListRelationM
+
+
 
 // *****************************************************************************
 // ********************************************************************* Actions
@@ -783,6 +876,83 @@ function startRelationFromFactionL( factionIDX, posP ) {
   // need to find FactionF related to this factionM
   let factionF = _listFactionM[factionIDX].view;
   startDrawArrow( factionF, posP );
+}
+
+function archiveJSONAction() {
+  // make new array with data to archive
+  let archiveFaction = _listFactionM.map( (item, index) => {
+    return {
+      factionA: item.model.toArchive()
+    };
+  });
+  let archiveRelation = _listRelationM.map( (item, index) => {
+    return {
+      relationA: item.toArchive()
+    };
+  });
+
+  let archive = {
+    factions: archiveFaction,
+    relations: archiveRelation
+  };
+  let doc = JSON.stringify( archive );
+  console.log( "__showAllAction in JSON" );
+  console.log( doc );
+  return doc;
+}
+function saveAllJSONAction() {
+  let doc = archiveJSONAction();
+  let jsonBlob = new Blob([doc],
+                          { type: 'application/javascript;charset=utf-8' });
+  saveAs( jsonBlob, "faction_data.json" );
+}
+function populateAllFromJSONAction( doc ) {
+  let archive = JSON.parse( doc );
+
+  let archiveFaction = archive.factions;
+  archiveFaction.forEach( (item, index) => {
+    console.log( "["+index+"]=",item );
+    if (item.factionA.viewInfo) {
+      addFactionAction( item.factionA, item.factionA.viewInfo.pos );
+    }
+    else {
+      alert( "Populate Faction from factionA without viewInfo" );
+      return;
+    }
+  });
+
+  let archiveRelation = archive.relations;
+  archiveRelation.forEach( (item, index) => {
+    console.log( "["+index+"]=",item );
+    if (item.relationA.viewInfo) {
+      addRelationAction( item.relationA );
+    }
+    else {
+      alert( "Populate Faction from factionA without viewInfo" );
+      return;
+    }
+  });
+}
+function readAllFromFileAction( file ) {
+  // Check right type (application/json)
+  if (file.type && file.type.indexOf( 'application/json' ) === -1) {
+    alert( "File "+file.name+" is not JSON file" );
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener( 'load', (event) => {
+    console.log( "__READ loaded" );
+    console.log( reader.result );
+    populateAllFromJSONAction( reader.result );
+  });
+  reader.addEventListener('progress', (event) => {
+    if (event.loaded && event.total) {
+      const percent = (event.loaded / event.total) * 100;
+      console.log(`__READ Progress: ${Math.round(percent)}`);
+    }
+  });
+  reader.readAsText(file); // when finished, will throw 'load'
 }
 // *************************************************************** END - Actions
 
@@ -1045,18 +1215,24 @@ canvas.on( 'object:moved', (opt) => {
 // *****************************************************************************
 // ********************************************************************* Buttons
 function btnInfo() {
-  console.log( "__Factions ("+_listFactionM.length+")" );
-  console.log( _listFactionM );
-  _listFactionM.forEach( (factionM) => {
-    console.log( factionM.model.strDisplay() )
-  });
-  showAllFactionAction();
+  /* console.log( "__Factions ("+_listFactionM.length+")" );
+   * console.log( _listFactionM );
+   * _listFactionM.forEach( (factionM) => {
+   *   console.log( factionM.model.strDisplay() )
+   * });
+   * 
+   * console.log( "__SHOW Faction " );
+   * showAllFactionAction();
+
+   * console.log( "__SHOW Relation " );
+   * showAllRelationAction(); */
+  archiveJSONAction();
 }
 function btnSave() {
-  saveAllFactionAction();
+  saveAllJSONAction();
 }
 function btnLoad(event) {
   console.log( "__Load e=",event );
-  readAllFactionAction( event.target.files[0] );
+  readAllFromFileAction( event.target.files[0] );
 }
 // ***************************************************************** END Buttons

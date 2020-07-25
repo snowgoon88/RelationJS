@@ -1,7 +1,10 @@
-* Bug : cG bouge pas dans [[file:src/basic_fabric.jsx::214]]
 * [1/1] BUG 
 ** DONE Après load factions, create faction has id 0 !! (not max)
-* _CURRENT_ : make new relation [[relationArrow]]
+* [0/3] UPD
+** TODO update _listFactionM to _listRelationM
+** TODO check that addXXXAction uses xxxxA /archive/ in every case
+** TODO is addXXXXAction used as Action ?
+* _CURRENT_ : load/save relation [[relationIO]]
 * [4/5] App
 ** DONE basic test example in nav https://js.cytoscape.org/#getting-started
 ** DONE basic react: test_react.html
@@ -13,7 +16,7 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 *** Component qui peut servir à ajouter un NOUVEAU Faction ou modifier
 ** TODO Fonction pour modifier une faction existante.
 
-* TODO [5/7] Fabric.js
+* TODO [6/8] Fabric.js
 ** DONE make rectangle + ligne (+arrow head or point)
 ** DONE compute intersection rectangle (bbox)/line (Hori and Ver)
 ** TODO Faction style
@@ -33,11 +36,13 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 *** DONE load
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
-** [0/3] Relation
-*** TODO lister
-*** TODO save
-*** TODO load
-** [0/2] Contextual Menu
+** DONE [3/3] Relation
+<<relationIO>>
+*** DONE lister
+*** DONE save
+*** DONE load
+** [0/3] Contextual Menu
+*** TODO remove menu if click again background
 *** TODO [0/1] Menu
 **** [0/0] Background
 ***** New Faction
