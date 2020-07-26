@@ -65,10 +65,7 @@ class FactionM {
 // ***** to Manage Faction.id
 var _idmax_faction = 0;
 function makeNewFactionM( name ) {
-  var nf = new FactionM( _idmax_faction, name );
-  _idmax_faction += 1;
-
-  return nf;
+  return makeNewFactionIdM( _idmax_faction, name );
 }
 function makeNewFactionIdM( id, name ) {
   if (id < _idmax_faction) {
@@ -93,15 +90,16 @@ function setFactionFunctor (cbk) {
 // require: fabric.js, canvas
 // IText has NO border (the border is only when selected)
 var _colHiglightRGBA = "rgba( 255, 0, 0, 0.2)";
-function addFactionF( factionM, pos, colorRGB ) {
+function addFactionF( factionM, posV, colorRGB ) {
   let colRGBA = 'rgba( '+colorRGB[0]+', '+colorRGB[1]+', '+colorRGB[2]+', 0.2)';
   var labelF = new fabric.IText( 'F'+factionM.id+': '+factionM.name, {
     id: factionM.id,
+    // model is needed in movedFactionF, to find Relations
     model: factionM,
     originX: 'center',
     originY: 'center',
-    left: pos.x,
-    top: pos.y,
+    left: posV.x,
+    top: posV.y,
     fontSize: 20,
     fontWeight: 'bold',
     underline: 'true',
@@ -193,8 +191,6 @@ const TextCellC = (props) => {
     </tr>
   );
 }
-
-
 // *****************************************************************************
 // ******************************************************************** FactionC
 // FactionM, mode="edit"|"add", setFactionHandle, addCallback
@@ -214,6 +210,7 @@ const FactionC = (props) => {
     setY( pos.y );
     //console.log( 'FC: setFaction' );
   }
+  // TODO build a new FactionC every time instead of using handle ?
   props.setFactionHandle( setFaction );
   // props.addListener( setFaction );
   
@@ -273,89 +270,35 @@ const FactionC = (props) => {
 // *****************************************************************************
 // Require: FactionM, canvas (fabric)
 var _listFactionM = [];
-function newFactionAction( factionM, pos ) {
-  var nf = makeNewFactionM( factionM.name );
-  var newFab = addFactionF( nf, pos, [0,0,255] );
-  nf.viewF = newFab;
-  _listFactionM.push( {model:nf, view:newFab} );
+function newFactionAction( factionM, posV ) {
+  var newM = makeNewFactionM( factionM.name );
+  var newF = addFactionF( newM, posV, [0,0,255] );
+  _listFactionM.push( newM );
   displayPopup( false );
 }
-function addFactionAction( factionM, pos ) {
-  if (factionM.id < 0) {
-    alert( "Cannot addFaction with improper id ("+factionM.id+")" );
+function addFactionAction( factionA ) {
+  console.log( "addFactionAction", factionA );
+  if (factionA.id < 0) {
+    alert( "Cannot addFaction with improper id ("+factionA.id+")" );
     return;
   }
-  if (_listFactionM[factionM.id]) {
-    alert( "Cannot addFaction over existing one (id="+factionM.id+")" );
+  if (_listFactionM[factionA.id]) {
+    alert( "Cannot addFaction over existing one (id="+factionA.id+")" );
     return;
   }
 
-  let newM = makeNewFactionIdM( factionM.id, factionM.name );
-  var newF = addFactionF( newM, pos, [0,0,255] );
-  newM.viewF = newF;
-  _listFactionM.push( {model:newM, view:newF} );
+  let newM = makeNewFactionIdM( factionA.id, factionA.name );
+  let posV = factionA.viewInfo.pos;
+  var newF = addFactionF( newM, posV, [0,0,255] );
+  _listFactionM.push( newM );
   displayPopup( false );
 }
 function editFactionAction( factionM ) {
-  let view = _listFactionM[factionM.id].view;
+  let view = _listFactionM[factionM.id].viewF;
   editFactionF( view, factionM );
-  _listFactionM[factionM.id] = {model:factionM, view: view};
+  _listFactionM[factionM.id] = factionM;
   displayPopup( false );
   canvas.renderAll();
-}
-function showAllFactionAction() {
-  // make new array with data to archive
-  let archiveFaction = _listFactionM.map( (item, index) => {
-    return {
-      factionM: item.model.toArchive()
-    };
-  });
-
-  let doc = JSON.stringify( archiveFaction );
-  console.log( "__JSON" );
-  console.log( doc );
-  return doc;
-}
-
-function saveAllFactionAction() {
-  let archive = _listFactionM.map( (item, index) => {
-    return {
-      factionM:item.model,
-      pos:{x:item.view.left, y:item.view.top},
-    };
-  });
-  let doc = JSON.stringify( archive );
-  let jsonBlob = new Blob([doc],
-                          { type: 'application/javascript;charset=utf-8' });
-  saveAs( jsonBlob, "faction_data.json" );
-}
-function readAllFactionAction(file) {
-  // Check right type (application/json)
-  if (file.type && file.type.indexOf( 'application/json' ) === -1) {
-    alert( "File "+file.name+" is not JSON file" );
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.addEventListener( 'load', (event) => {
-    console.log( "__READ loaded" );
-    console.log( reader.result );
-    populateFactionFromJSON( reader.result );
-  });
-  reader.addEventListener('progress', (event) => {
-    if (event.loaded && event.total) {
-      const percent = (event.loaded / event.total) * 100;
-      console.log(`__READ Progress: ${Math.round(percent)}`);
-    }
-  });
-  reader.readAsText(file); // when finished, will throw 'load'
-}
-function populateFactionFromJSON( doc ) {
-  let archive = JSON.parse( doc );
-  archive.forEach( (item,index) => {
-    console.log( "["+index+"]=",item );
-    addFactionAction( item.factionM, item.pos );
-  });
 }
 // *********************************************************** END - ListFaction
 
@@ -390,16 +333,13 @@ class RelationM {
       archive['viewInfo'] = null;
     }
     
-  return archive;    
+    return archive;    
   }
 }
 // ***** to Manage Faction.id
 var _idmax_relation = 0;
 function makeNewRelationM( name, srcFactionM, destFactionM ) {
-  var nr = new RelationM( _idmax_relation, name, srcFactionM, destFactionM );
-  _idmax_relation += 1;
-
-  return nr;
+  return makeNewRelationIdM( _idmax_relation, name, srcFactionM, destFactionM );
 }
 function makeNewRelationIdM( id, name, srcFactionM, destFactionM ) {
   console.log( "makeNewRelation ", id, name, srcFactionM, destFactionM );
@@ -409,7 +349,7 @@ function makeNewRelationIdM( id, name, srcFactionM, destFactionM ) {
     return;
   }
   var nr = new RelationM( id, name, srcFactionM, destFactionM);
-  _idmax_faction = id+1;
+  _idmax_relation = id+1;
 
   return nr;
 }
@@ -773,7 +713,7 @@ function newRelationAction( srcF, destF ) {
 }
 function addRelationAction( relationA ) {
   console.log( "addRelationAction", relationA );
-    if (relationA.id < 0) {
+  if (relationA.id < 0) {
     alert( "Cannot addRelation with improper id ("+relationA.id+")" );
     return;
   }
@@ -781,12 +721,11 @@ function addRelationAction( relationA ) {
     alert( "Cannot addRerlation over existing one (id="+relationA.id+")" );
     return;
   }
-
-  let srcFactionM = _listFactionM[relationA.srcId].model;
-  let destFactionM = _listFactionM[relationA.destId].model;
+  let srcFactionM = _listFactionM[relationA.srcId];
+  let destFactionM = _listFactionM[relationA.destId];
 
   var nrM = makeNewRelationIdM( relationA.id, relationA.name,
-                              srcFactionM, destFactionM );
+                                srcFactionM, destFactionM );
   var nrF = new RelationF( nrM, 'red' );
   nrM.viewF = nrF;
   nrF.setCtrlPt( relationA.viewInfo.posCtrl );
@@ -864,17 +803,17 @@ function askNewFactionM( x, y ) {
   setFactionHandle( new FactionM( -1, 'faction_name' ), {x: x, y:y}, "add" );
   displayPopup( true );
 }
-function askEditFactionL( factionIDX, pos ) {
+function askEditFactionL( factionIDX, posV ) {
   console.log( 'askE',pos );
-  popupElement.style.left = pos.x + 'px';
-  popupElement.style.top = pos.y + 'px';
-  setFactionHandle( _listFactionM[factionIDX].model, pos, "edit", );
+  popupElement.style.left = posV.x + 'px';
+  popupElement.style.top = posV.y + 'px';
+  setFactionHandle( _listFactionM[factionIDX], posV, "edit", );
   displayPopup( true );
 }
 function startRelationFromFactionL( factionIDX, posP ) {
   console.log( 'askNRFF', posP );
   // need to find FactionF related to this factionM
-  let factionF = _listFactionM[factionIDX].view;
+  let factionF = _listFactionM[factionIDX].viewF;
   startDrawArrow( factionF, posP );
 }
 
@@ -882,7 +821,7 @@ function archiveJSONAction() {
   // make new array with data to archive
   let archiveFaction = _listFactionM.map( (item, index) => {
     return {
-      factionA: item.model.toArchive()
+      factionA: item.toArchive()
     };
   });
   let archiveRelation = _listRelationM.map( (item, index) => {
@@ -913,7 +852,9 @@ function populateAllFromJSONAction( doc ) {
   archiveFaction.forEach( (item, index) => {
     console.log( "["+index+"]=",item );
     if (item.factionA.viewInfo) {
+      console.log( "populate with", item.factionA );
       addFactionAction( item.factionA, item.factionA.viewInfo.pos );
+      console.log( "_listFactionM size=",_listFactionM.length, _idmax_faction );
     }
     else {
       alert( "Populate Faction from factionA without viewInfo" );
@@ -1215,17 +1156,7 @@ canvas.on( 'object:moved', (opt) => {
 // *****************************************************************************
 // ********************************************************************* Buttons
 function btnInfo() {
-  /* console.log( "__Factions ("+_listFactionM.length+")" );
-   * console.log( _listFactionM );
-   * _listFactionM.forEach( (factionM) => {
-   *   console.log( factionM.model.strDisplay() )
-   * });
-   * 
-   * console.log( "__SHOW Faction " );
-   * showAllFactionAction();
-
-   * console.log( "__SHOW Relation " );
-   * showAllRelationAction(); */
+  console.log( "_listFactionM size=",_listFactionM.length, _idmax_faction );
   archiveJSONAction();
 }
 function btnSave() {
