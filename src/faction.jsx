@@ -702,7 +702,7 @@ function newRelationAction( srcF, destF ) {
     alert( "No Relation with same Element" );
     return;
   }
-  var nrM = makeNewRelationM( 'TODOmakeR', srcF.model, destF.model );
+  var nrM = makeNewRelationM( '_name_', srcF.model, destF.model );
   var nrF = new RelationF( nrM, 'red' );
   nrM.viewF = nrF;
   _listRelationM.push( nrM );
@@ -760,7 +760,56 @@ function showAllRelationAction() {
 
 // ********************************************************* END - ListRelationM
 
+// *****************************************************************************
+// ******************************************************************* RelationC
+// RelationC (RelationM)
+//
+// require: TextCellC, RelationM
 
+const RelationC = (props) => {
+  const [name, setName] = React.useState( props.relationM.name );
+  const [from, setFrom] = React.useState( props.relationM.srcM.name );
+  const [dest, setDest] = React.useState( props.relationM.destM.name );
+
+  const handleChangeFrom = (value) => {
+    console.log( "RelationC::From ", value );
+  }
+  
+  const handleBtnSave = () => {
+    console.log( "RelationC::SAVE" );
+  }
+  
+  var buttonSave = <button onClick={handleBtnSave}>Save</button>;
+  // render
+  return (
+    <div>
+      <fieldset>
+        <legend>Relation ({props.relationM.id}) </legend>
+        <table>
+          <tbody>
+            <TextCellC
+              title="Name"
+              setValue={setName}
+              value={name}
+            />
+            <TextCellC
+              title="From"
+              setValue={handleChangeFrom}
+              value={from}
+            />
+            <TextCellC
+              title="To"
+              setValue={setDest}
+              value={dest}
+            />
+          </tbody>
+        </table>
+        {buttonSave}
+      </fieldset>
+    </div>
+  );
+}
+// ************************************************************* END - RelationC
 
 // *****************************************************************************
 // ********************************************************************* Actions
@@ -815,6 +864,43 @@ function startRelationFromFactionL( factionIDX, posP ) {
   // need to find FactionF related to this factionM
   let factionF = _listFactionM[factionIDX].viewF;
   startDrawArrow( factionF, posP );
+}
+
+var newPopupE = document.getElementById( 'context_menu' );
+// to prevent default context menu for showing off
+newPopupE.addEventListener( 'contextmenu', function(event) {
+  //console.log( "contextMenu contextmenu", event.buttons );
+  event.preventDefault();
+  event.stopPropagation();
+},
+                            true /* capture */
+);
+function displayPopupE( flag ) {
+  if (flag) {
+    newPopupE.style.display = "block";
+  }
+  else {
+    newPopupE.style.display = "none";
+  } 
+}
+
+var _relationE;
+function askNameRelationM( x, y ) {
+  _relationE = document.createElement( "DIV" );
+  newPopupE.appendChild( _relationE );
+
+  ReactDOM.render(
+    <NameRelationC
+      name="_name_"
+    />,
+    _relationE
+  );
+  displayPopupE( true );
+}
+function removeRelationE() {
+  console.log( "removeRelationE");
+  _relationE.remove();
+  displayPopupE( false );
 }
 
 function archiveJSONAction() {
@@ -1015,11 +1101,16 @@ function abortDrawArrow() {
     canvas.remove( _lineDA );
   }
 }
-function endDrawArrow( itemF ) {
+function endDrawArrow( x, y, itemF ) {
   console.log( "endDA", itemF );
   // check it is a Faction
   if (itemF.model && itemF.model.type === "FactionM" ) {
     _stateDA = "none";
+
+    // ask for a Name
+    var name = askNameRelationM( x, y );
+    // TODO : give callback for ok, for cancel
+    
     // Remove line
     canvas.remove( _lineDA );
     // create new relation
@@ -1098,7 +1189,7 @@ canvas.on( 'mouse:down', function (opt) {
       // while drawingArrow
       if (isDrawArrow()) {
         console.log( "ED 2 display target" );
-        endDrawArrow( opt.target );
+        endDrawArrow( opt.e.x, opt.e.y, opt.target );
         return
       }
       // console.log( "RC: ",opt );
