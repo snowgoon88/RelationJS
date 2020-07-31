@@ -19,6 +19,7 @@ bodyElement.addEventListener( 'keyup', function (event) {
     displayPopup( false );
     removeContextMenuC();
     abortDrawArrow();
+    removeRelationE();
   }
 });
 
@@ -696,13 +697,13 @@ class RelationF {
 // *************************************************************** ListRelationM
 // *****************************************************************************
 var _listRelationM = [];
-function newRelationAction( srcF, destF ) {
+function newRelationAction( name, srcM, destM ) {
   // check different items
-  if (srcF.model === destF.model) {
+  if (srcM === destM) {
     alert( "No Relation with same Element" );
     return;
   }
-  var nrM = makeNewRelationM( '_name_', srcF.model, destF.model );
+  var nrM = makeNewRelationM( name, srcM, destM );
   var nrF = new RelationF( nrM, 'red' );
   nrM.viewF = nrF;
   _listRelationM.push( nrM );
@@ -866,8 +867,43 @@ function startRelationFromFactionL( factionIDX, posP ) {
   startDrawArrow( factionF, posP );
 }
 
-var newPopupE = document.getElementById( 'context_menu' );
-// to prevent default context menu for showing off
+
+// *****************************************************************************
+// *****************************************************************************
+const NameRelationC = (props) => {
+  const [name, setName] = React.useState( props.name );
+  
+  const handleBtnOK = () => {
+    props.okCbk( name );
+  }
+  const handleBtnCancel = () => {
+    props.cancelCbk();
+  }
+  
+  var buttonOK = <button onClick={handleBtnOK}>Ok</button>;
+  var buttonCancel = <button onClick={handleBtnCancel}>Cancel</button>;
+  // render
+  return (
+    <div>
+    <fieldset>
+    <legend>Relation ({props.id}) </legend>
+    <table>
+    <tbody>
+    <TextCellC
+    title="Name"
+    setValue={setName}
+              value={name}
+    />
+          </tbody>
+        </table>
+      </fieldset>
+      {buttonOK}{buttonCancel}
+    </div>
+  );
+}
+
+var newPopupE = document.getElementById( 'popup_menu' );
+// to prevent default context menu for showneing off
 newPopupE.addEventListener( 'contextmenu', function(event) {
   //console.log( "contextMenu contextmenu", event.buttons );
   event.preventDefault();
@@ -885,21 +921,26 @@ function displayPopupE( flag ) {
 }
 
 var _relationE;
-function askNameRelationM( x, y ) {
+function askNameRelationM( x, y, okCbk, cancelCbk ) {
   _relationE = document.createElement( "DIV" );
   newPopupE.appendChild( _relationE );
-
+  
   ReactDOM.render(
     <NameRelationC
-      name="_name_"
+      id="-1"
+      name="relation_name"
+      okCbk={okCbk}
+      cancelCbk={cancelCbk}
     />,
     _relationE
   );
+  newPopupE.style.left = x + 'px';
+  newPopupE.style.top = y + 'px';
   displayPopupE( true );
 }
 function removeRelationE() {
   console.log( "removeRelationE");
-  _relationE.remove();
+  if (_relationE) _relationE.remove();
   displayPopupE( false );
 }
 
@@ -991,7 +1032,7 @@ const handleDummy = ( obj, pos ) => {
 }
 var _factionContextMenu = [
   {label:"Edit", cbk:askEditFactionL},
-  {label:"TODONew Relation", cbk:startRelationFromFactionL},
+  {label:"New Relation", cbk:startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
   {label: "TodoDelete", cbk:handleDummy},
 ];
@@ -1105,18 +1146,21 @@ function endDrawArrow( x, y, itemF ) {
   console.log( "endDA", itemF );
   // check it is a Faction
   if (itemF.model && itemF.model.type === "FactionM" ) {
-    _stateDA = "none";
+    //_stateDA = "none";
 
     // ask for a Name
-    var name = askNameRelationM( x, y );
-    // TODO : give callback for ok, for cancel
-    
-    // Remove line
-    canvas.remove( _lineDA );
-    // create new relation
-    console.log( "TODO createNewRelation" );
-    // TPDO TMP
-    newRelationAction( _srcFDA, itemF );
+    const gotName = (name) => {
+      console.log( "endARROW => newRelation", name );
+      canvas.remove( _lineDA );
+      newRelationAction( name, _srcFDA.model, itemF.model );
+      removeRelationE();
+    }
+    const cancelName = () => {
+      console.log( "endARROW => abort" );
+      abortDrawArrow();
+      removeRelationE();
+    }
+    askNameRelationM( x, y, gotName, cancelName );
   }
   else {
     return abortDrawArrow();
@@ -1166,7 +1210,7 @@ canvas.on( 'mouse:down', function (opt) {
       // while drawingArrow
       if (isDrawArrow()) {
         console.log( "ED 1 display target" );
-        endDrawArrow( opt.target );
+        endDrawArrow( opt.e.x, opt.e.y, opt.target );
         return
       }
     }
