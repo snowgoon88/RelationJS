@@ -301,6 +301,27 @@ function editFactionAction( factionM ) {
   displayPopup( false );
   canvas.renderAll();
 }
+function delFactionAction( factionIDX ) {
+  console.log( "__delFaction", factionIDX );
+  
+  if (_listFactionM[factionIDX]) {
+    let factionM = _listFactionM[factionIDX];
+
+    // Remove all Relation to this faction
+    _listRelationM.forEach( (item, index) => {
+      if (item.isRelated( factionM )) {
+        delRelationAction( item.id );
+      }
+    });
+    
+    let itemF = _listFactionM[factionIDX].viewF;
+    canvas.remove( itemF );
+    _listFactionM[factionIDX] = null;
+  }
+  else {
+    alert( "Cannot delFaction on non-existing faction" );
+  }
+}
 // *********************************************************** END - ListFaction
 
 // *****************************************************************************
@@ -572,6 +593,12 @@ class RelationF {
     canvas.add( this.ctrlF );
     canvas.add( this.labelF );
   }
+  remove() {
+    canvas.remove( this.pathF );
+    canvas.remove( this.headF );
+    canvas.remove( this.ctrlF );
+    canvas.remove( this.labelF );
+  }
   toArchive() {
     var archive = {
       posCtrl: this.ctrlPt,
@@ -742,6 +769,15 @@ function findRelationMWith( itemM ) {
     }
   }
   return result;
+}
+function delRelationM( relationIDX ) {
+  console.log( "__delRelation", relationIDX );
+
+  if (_listRelationM[relationIDX]) {
+    let relationM = _listRelationM[relationIDX];
+    relationM.viewF.remove();
+    _listRelationM[relationIDX] = null;
+  }
 }
 
 function showAllRelationAction() {
@@ -947,14 +983,18 @@ function removeRelationE() {
 function archiveJSONAction() {
   // make new array with data to archive
   let archiveFaction = _listFactionM.map( (item, index) => {
-    return {
-      factionA: item.toArchive()
-    };
+    if (item) {
+      return {
+        factionA: item.toArchive()
+      }
+    }
   });
   let archiveRelation = _listRelationM.map( (item, index) => {
-    return {
-      relationA: item.toArchive()
-    };
+    if (item) {
+      return {
+        relationA: item.toArchive()
+      }
+    }
   });
 
   let archive = {
@@ -1034,7 +1074,7 @@ var _factionContextMenu = [
   {label:"Edit", cbk:askEditFactionL},
   {label:"New Relation", cbk:startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
-  {label: "TodoDelete", cbk:handleDummy},
+  {label: "TodoDelete", cbk:delFactionAction}
 ];
 
 // FactionM, pos (x,y), 

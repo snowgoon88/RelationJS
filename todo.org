@@ -46,9 +46,9 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 *** TODO [0/1] Menu
 **** [0/0] Background
 ***** New Faction
-**** TODO [2/4] Faction
+**** TODO [3/4] Faction
 ***** DONE Edit
-***** TODO New Relation
+***** DONE New Relation
 <<relationArrow>> sait choisir src and dest => créer un Relation
 - créer un RelationF  : OK
 - triangle            : OK
@@ -57,9 +57,10 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 - update si mvt Ctrl  : OK
 - update si mvt both end : OK
 - label               : OK
-- demander label      : 
+- demander label      : OK
 ***** DONE ----
 ***** TODO Delete
+comment effacer toutes les références (sur les Relations)
 *** Edit
 *** Relation arrow
 Fires:
