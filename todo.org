@@ -1,22 +1,12 @@
-* [1/1] BUG 
+* [1/2] BUG 
+** TODO Quand en train de nommer Relation, peut bouger Faction
 ** DONE Après load factions, create faction has id 0 !! (not max)
 * [3/3] UPD
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* _CURRENT_ : set/change name of Relation
-* [4/5] App
-** DONE basic test example in nav https://js.cytoscape.org/#getting-started
-** DONE basic react: test_react.html
-** DONE Utiliser le nouveau React : React Funcion Components et useState, (useEffect)
-https://reactjs.org/docs/components-and-props.html
-https://reactjs.org/docs/hooks-intro.html
-https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
-** DONE on peut utiliser un component depuis Cytoscape
-*** Component qui peut servir à ajouter un NOUVEAU Faction ou modifier
-** TODO Fonction pour modifier une faction existante.
-
-* TODO [6/8] Fabric.js
+* _CURRENT_ : [[relationMenu]]
+* TODO [6/9] Fabric.js
 ** DONE make rectangle + ligne (+arrow head or point)
 ** DONE compute intersection rectangle (bbox)/line (Hori and Ver)
 ** TODO Faction style
@@ -41,14 +31,13 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 *** DONE lister
 *** DONE save
 *** DONE load
-** [0/3] Contextual Menu
+** TODO [0/2] Contextual Menu
 *** TODO remove menu if click again background
-*** TODO [0/1] Menu
-**** [0/0] Background
-***** New Faction
-**** TODO [3/4] Faction
-***** DONE Edit
-***** DONE New Relation
+*** [1/1] Background
+**** DONE addFaction
+*** [3/4] Faction
+**** DONE Edit
+**** DONE New Relation
 <<relationArrow>> sait choisir src and dest => créer un Relation
 - créer un RelationF  : OK
 - triangle            : OK
@@ -58,23 +47,40 @@ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
 - update si mvt both end : OK
 - label               : OK
 - demander label      : OK
-***** DONE ----
-***** TODO Delete
+**** DONE ----
+**** TODO Delete
 comment effacer toutes les références (sur les Relations)
-*** Edit
-*** Relation arrow
-Fires:
-    event:changed
-    selection:changed
-    editing:entered
-    editing:exited
-*** TODO Relation Name/Label
+*** TODO [2/3] Relation
+<<relationMenu>>
+**** TODO Edit
+**** DONE ----
+**** DONE Delete
+*** Divers/Archive
+**** Edit
+**** Relation arrow
+ Fires:
+     event:changed
+     selection:changed
+     editing:entered
+     editing:exited
 * DONE use Babel 
 npm install --save-dev @babel/preset-react
 RelationJS>$ npx babel src --out-dir lib
 * DONE use FileSaver
 npm install file-saver
 faire les liens appropriés
+* Archive
+** [4/5] App
+*** DONE basic test example in nav https://js.cytoscape.org/#getting-started
+*** DONE basic react: test_react.html
+*** DONE Utiliser le nouveau React : React Funcion Components et useState, (useEffect)
+ https://reactjs.org/docs/components-and-props.html
+ https://reactjs.org/docs/hooks-intro.html
+ https://blog.bitsrc.io/get-hooked-on-react-hooks-706b0dda1058
+*** DONE on peut utiliser un component depuis Cytoscape
+**** Component qui peut servir à ajouter un NOUVEAU Faction ou modifier
+*** TODO Fonction pour modifier une faction existante.
+
 * ORG
 ** Link [[link][display
 *** <<anchor>>

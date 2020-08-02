@@ -97,6 +97,7 @@ function addFactionF( factionM, posV, colorRGB ) {
     id: factionM.id,
     // model is needed in movedFactionF, to find Relations
     model: factionM,
+    elemType: "Faction",
     originX: 'center',
     originY: 'center',
     left: posV.x,
@@ -487,7 +488,9 @@ function computeBezierPointVec( srcV, destV, ctrlV, abs ) {
 // - labelF [fabric.] : the text, near the mid point
 class RelationF {
   constructor( relationM, colRGB ) {
+    this.id = relationM.id;
     this.model = relationM;
+    this.elemType = "Relation";
     // default path is 100,100 --<150,90>--> 200,100
     this.srcPt =  new Vec( 100, 100 );
     this.ctrlPt = new Vec( 150,  80 );
@@ -497,6 +500,10 @@ class RelationF {
 
     // FabricJS elements
     this.pathF = new fabric.Path( 'M100,100 Q150,80 200,100', {
+      id: relationM.id,
+      model: relationM,
+      elemType: "Relation",
+      
       stroke: colRGB,
       fill: false,
       selectable: true,
@@ -512,6 +519,10 @@ class RelationF {
       lockSkewingY: true,
     });
     this.ctrlF = new fabric.Circle({
+      id: relationM.id,
+      model: relationM,
+      elemType: "Relation",
+
       originX: 'center',
       originY: 'center',
       left: 150,
@@ -532,6 +543,10 @@ class RelationF {
     });
     
     this.headF = new fabric.Triangle({
+      id: relationM.id,
+      model: relationM,
+      elemType: "Relation",
+
       originX: 'center',
       left: 10,
       //originY: 'center',
@@ -552,6 +567,10 @@ class RelationF {
       lockSkewingY: true,
     });
     this.labelF = new fabric.IText( relationM.id+': '+relationM.name, {
+      id: relationM.id,
+      model: relationM,
+      elemType: "Relation",
+
       originX: 'center',
       originY: 'center',
       left: this.midPt.x,
@@ -770,7 +789,7 @@ function findRelationMWith( itemM ) {
   }
   return result;
 }
-function delRelationM( relationIDX ) {
+function delRelationAction( relationIDX ) {
   console.log( "__delRelation", relationIDX );
 
   if (_listRelationM[relationIDX]) {
@@ -902,7 +921,13 @@ function startRelationFromFactionL( factionIDX, posP ) {
   let factionF = _listFactionM[factionIDX].viewF;
   startDrawArrow( factionF, posP );
 }
-
+function askEditRelationL( relationIDX, posV ) {
+  alert( "askEditRelationL TODO" );
+}
+function askDelRelationL( relationIDX, posV ) {
+  // TODO ask for confirmation ?
+  delRelationAction( relationIDX );
+}
 
 // *****************************************************************************
 // *****************************************************************************
@@ -1076,6 +1101,11 @@ var _factionContextMenu = [
   {label:"<hr>",cbk:null}, // separator
   {label: "TodoDelete", cbk:delFactionAction}
 ];
+var _relationContextMenu = [
+  {label:"Edit", cbk:askEditRelationL},
+  {label:"<hr>",cbk:null}, // separator
+  {label: "Delete", cbk:askDelRelationL}
+]
 
 // FactionM, pos (x,y), 
 // items = [ {label, cnk] OR {label:"<hr>", cbk:null} for sep ]
@@ -1107,6 +1137,38 @@ const FactionMenu = (props) => {
     </div>
   );
 }
+// PROPS: msg=String, elemIDX=int, pos={x,y}, items=[{label, cbk}]
+const ContextMenuC = (props) => {
+
+  // Build menu Items
+  const listItems = props.items.map( (item, index) => {
+    if (item.label === "<hr>") {
+      return(<hr key={index}/>);
+    }
+    return (
+      <span
+        key={index}
+        onClick={() =>  {
+          removeContextMenuC();
+          item.cbk(props.elemIDX, props.pos)
+        }}
+      >
+        {item.label}
+      </span>
+    );
+  });
+  
+  // render
+  return (
+    <div className="vertical_menu">
+    <h2>
+    {props.msg}
+    </h2>
+      {listItems}
+    </div>
+  );
+}
+
 var contextMenuE = document.getElementById( 'context_menu' );
 // to prevent 'context menu for showing off
 contextMenuE.addEventListener( 'contextmenu', function(event) {
@@ -1126,8 +1188,12 @@ function displayContextMenu( flag ) {
 }
 
 var _contextMenuE;
-function showContextMenuC( factionIDX, x, y ) {
-  console.log( "showContextMenuC",factionIDX,x,y );
+// TODO: remove ?
+// function showFactionContextMenu( factionIDX, x, y) {
+//   showContextMenuC( factionIDX, x, y, "Faction", _factionContextMenu );
+// }
+function showContextMenuC( elemIDX, x, y, msg, menuItems ) {
+  console.log( "showContextMenuC", elemIDX, x, y, msg );
   _contextMenuE = document.createElement( "DIV" );
   contextMenuE.appendChild( _contextMenuE );
   _contextMenuE.innerHTML = "CMenu at "+x+"px, ",y+" px";
@@ -1136,14 +1202,16 @@ function showContextMenuC( factionIDX, x, y ) {
   contextMenuE.style.top = y + 'px';
 
   ReactDOM.render(
-    <FactionMenu
-      factionIDX={factionIDX}
+    <ContextMenuC
+      elemIDX={elemIDX}
       pos={{x:x, y:y}}
-      items={_factionContextMenu}
+      msg={msg}
+      items={menuItems}
     />,
     _contextMenuE );
   displayContextMenu( true );
 }
+
 function removeContextMenuC() {
   console.log( "removeContextMenuC");
   _contextMenuE.remove();
@@ -1270,16 +1338,35 @@ canvas.on( 'mouse:down', function (opt) {
       //opt.e.stopPropagation();
     }
     else {
-      // while drawingArrow
-      if (isDrawArrow()) {
-        console.log( "ED 2 display target" );
-        endDrawArrow( opt.e.x, opt.e.y, opt.target );
-        return
+      // a Faction
+      if (opt.target.elemType === "Faction") {
+        // while drawingArrow
+        if (isDrawArrow()) {
+          console.log( "ED 2 display target" );
+          endDrawArrow( opt.e.x, opt.e.y, opt.target );
+          return
+        }
+        // console.log( "RC: ",opt );
+        // console.log( "  F:",_listFaction[opt.target.id] );
+        //askEditFactionM( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y );
+        showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
+                          "Faction Menu", _factionContextMenu );
       }
-      // console.log( "RC: ",opt );
-      // console.log( "  F:",_listFaction[opt.target.id] );
-      //askEditFactionM( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y );
-      showContextMenuC( opt.target.id, opt.e.x, opt.e.y);
+      else if (opt.target.elemType === "Relation") {
+        // while drawingArrow
+        if (isDrawArrow()) {
+          abortDrawArrow();
+          return
+        }
+
+        // ContextMenu for Relation
+        showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
+                          "Relation Menu", _relationContextMenu );
+      }
+      else {
+        console.log( "RClick on ", opt.target );
+        alert( "RClick on what ?" );
+      }
     }
   }
   // Middle click
