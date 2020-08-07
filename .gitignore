@@ -1,4 +1,10 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
+*~
+.\#*
+\#*
+
+# NPM
+/node_modules
 
 # compiled output
 /dist
@@ -19,3 +25,9 @@
 # System Files
 .DS_Store
 Thumbs.db
+
+# GTAGS
+GTAGS
+GPATH
+GRTAGS
+gtags.files

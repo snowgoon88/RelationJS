@@ -1,0 +1,26 @@
+{
+  "name": "relationjs",
+  "version": "0.1.0",
+  "description": "Vizualisation of intra-faction and character relations, RPG oriented.",
+  "main": "relations.html",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "task": "node ./tasksfile.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snowgoon88/RelationJS.git"
+  },
+  "author": "snowgoon88 AT gmail",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/snowgoon88/RelationJS/issues"
+  },
+  "homepage": "https://github.com/snowgoon88/RelationJS#readme",
+  "devDependencies": {
+    "tasksfile": "^5.1.1"
+  }
+}
