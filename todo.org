@@ -1,7 +1,11 @@
-* [1/2] BUG 
-** TODO Quand en train de nommer Relation, peut bouger Faction
+* [3/4] BUG 
+** TODO askNewFaction s'empile quand on clique dans background
+** DONE Context Menu s'empilent quand ContextMenu est actif et qu'on re-select
+disable rightclick when already popping out
+** DONE Quand en train de nommer Relation, peut bouger Faction
 ** DONE Après load factions, create faction has id 0 !! (not max)
-* [3/3] UPD
+* [4/4] UPD
+** DONE All Popup using the same mecanism, popupElement
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES

@@ -13,13 +13,11 @@ var bodyElement = document.getElementsByTagName("BODY")[0];
  *   console.log( "BODY keypress", event );
  * }); */
 bodyElement.addEventListener( 'keyup', function (event) {
-  //console.log( "BODY keydown", event );
+  //console.log( "BODY keyup", event );
   if (event.key === "Escape" ) {
     //console.log( "  ESC" );
-    displayPopup( false );
-    removeContextMenuC();
+    removeContextElementC();
     abortDrawArrow();
-    removeRelationE();
   }
 });
 
@@ -33,7 +31,27 @@ var canvas = new fabric.Canvas( 'fabric_canvas', {
   stopContextMenu: true,
 });
 
-
+// *****************************************************************************
+// **************************************************** Selectability/Popability
+// to switch selected FabricObject between selectable/non-selectable
+// TODO: need to be remove from the list
+var _allSelectableF = [];
+function allSetSelectable( flag ) {
+  _allSelectableF.map( (item,index) => {
+    item.selectable = flag;
+  });
+  canvas.requestRenderAll();
+}
+function removeFromAllSelectable( itemF ) {
+  _allSelectableF = _allSelectableF.filter( (ele) => {
+    ele != itemF;
+  });
+}
+var _allowPopup = true;
+function setPopable( flag ) {
+  console.log( "setPopable", flag );
+  _allowPopup = flag;
+}
 // *****************************************************************************
 // ********************************************************************* Faction
 // *****************************************************************************
@@ -78,11 +96,6 @@ function makeNewFactionIdM( id, name ) {
 
   return nf;
 }
-// ***** to Change the Faction displayed/edited in FactionC
-var setFactionHandle;
-function setFactionFunctor (cbk) {
-  setFactionHandle=cbk;
-}
 // *************************************************************** END - Faction
 
 // *****************************************************************************
@@ -118,15 +131,16 @@ function addFactionF( factionM, posV, colorRGB ) {
     // IText
     editable: false,
   });
+  _allSelectableF.push( labelF );
   factionM.viewF = labelF;
   
   labelF.on( 'mouseover', function (opt) {
-    console.log( 'MOver' );
+    //console.log( 'MOver' );
     labelF.set( {'textBackgroundColor': labelF.highlightBackgroundColor} );
     canvas.requestRenderAll();
   });
   labelF.on( 'mouseout', function (opt) {
-    console.log( 'MOut' );
+    //console.log( 'MOut' );
     labelF.set( {'textBackgroundColor': labelF.copyTextBackgroundColor} );
     canvas.requestRenderAll();
   });
@@ -195,73 +209,36 @@ const TextCellC = (props) => {
 }
 // *****************************************************************************
 // ******************************************************************** FactionC
-// FactionM, mode="edit"|"add", setFactionHandle, addCallback
-const FactionC = (props) => {
-  //console.log( 'New FC for '+props.faction.name );
-  const [name, setName] = React.useState( props.factionM.name );
-  const [id, setId] = React.useState( props.factionM.id );
-  const [mode, setMode] = React.useState( props.mode );
-  const [x, setX] = React.useState( props.pos.x );
-  const [y, setY] = React.useState( props.pos.y );
-  
-  const setFaction = (factionM, pos, mode) => {
-    setName( factionM.name );
-    setId( factionM.id );
-    setMode( mode );
-    setX( pos.x );
-    setY( pos.y );
-    //console.log( 'FC: setFaction' );
-  }
-  // TODO build a new FactionC every time instead of using handle ?
-  props.setFactionHandle( setFaction );
-  // props.addListener( setFaction );
-  
-  const handleBtnAdd = () => {
-    props.addCallback( new FactionM( id, name), {x:x, y:y} );
-    //console.log( "FactionC name=", name, ", id=", id );
-  }
-  const handleBtnEdit = () => {
-    props.editCallback( new FactionM( id, name), {x:x, y:y} );
+// PROPS: id, name, okCbk, cancelCbk
+const NameFactionC = (props) => {
+  const [name, setName] = React.useState( props.name );
+
+  const handleBtnOK = () => {
+    props.okCbk( name );
   }
   const handleBtnCancel = () => {
-    displayPopup( false );
+    props.cancelCbk();
   }
 
-  // Prevent from being used everytime with no change ?
-  /* React.useEffect( () => {
-   *   console.log( "FC: start use Effect" );
+  var buttonOK = <button onClick={handleBtnOK}>Ok</button>;
+  var buttonCancel = <button onClick={handleBtnCancel}>Cancel</button>;
 
-   *   return function cleanup() { // could be anonymus or arrow fct
-   *     console.log( "FC: cleanup" );
-   *   };
-   * }); */
-
-  var buttonAdd  = <button onClick={handleBtnAdd}>Add</button>;
-  var buttonEdit = <button onClick={handleBtnEdit}>Edit</button>;
-  
-  if (mode === "edit") {
-    buttonAct = buttonEdit;
-  }
-  else {
-    buttonAct = buttonAdd;
-  }
-  let buttonCancel = <button onClick={handleBtnCancel}>Cancel</button>;
-  
+  // render
   return (
     <div>
-      <fieldset>
-        <legend>Faction ({id}) </legend>
-        <table>
-          <tbody>
-            <TextCellC
-              title="Name"
-              setValue={setName}
+    <fieldset>
+    <legend>Faction ({props.id}) </legend>
+    <table>
+    <tbody>
+    <TextCellC
+    title="Name"
+    setValue={setName}
               value={name}
-            />
+    />
           </tbody>
         </table>
-        {mode === "edit" ? buttonEdit : buttonAdd}&nbsp;{buttonCancel}
       </fieldset>
+      {buttonOK}{buttonCancel}
     </div>
   );
 }
@@ -272,11 +249,10 @@ const FactionC = (props) => {
 // *****************************************************************************
 // Require: FactionM, canvas (fabric)
 var _listFactionM = [];
-function newFactionAction( factionM, posV ) {
-  var newM = makeNewFactionM( factionM.name );
+function newFactionAction( name, posV ) {
+  var newM = makeNewFactionM( name );
   var newF = addFactionF( newM, posV, [0,0,255] );
   _listFactionM.push( newM );
-  displayPopup( false );
 }
 function addFactionAction( factionA ) {
   console.log( "addFactionAction", factionA );
@@ -293,13 +269,11 @@ function addFactionAction( factionA ) {
   let posV = factionA.viewInfo.pos;
   var newF = addFactionF( newM, posV, [0,0,255] );
   _listFactionM.push( newM );
-  displayPopup( false );
 }
 function editFactionAction( factionM ) {
   let view = _listFactionM[factionM.id].viewF;
   editFactionF( view, factionM );
   _listFactionM[factionM.id] = factionM;
-  displayPopup( false );
   canvas.renderAll();
 }
 function delFactionAction( factionIDX ) {
@@ -316,6 +290,7 @@ function delFactionAction( factionIDX ) {
     });
     
     let itemF = _listFactionM[factionIDX].viewF;
+    removeFromAllSelectable( itemF );
     canvas.remove( itemF );
     _listFactionM[factionIDX] = null;
   }
@@ -607,12 +582,18 @@ class RelationF {
       this.setActive();
     });
 
+    _allSelectableF.push( this.pathF );
+    _allSelectableF.push( this.ctrlF );
+    
     canvas.add( this.pathF );
     canvas.add( this.headF );
     canvas.add( this.ctrlF );
     canvas.add( this.labelF );
   }
   remove() {
+    removeFromAllSelectable( this.pathF );
+    removeFromAllSelectable( this.ctrlF );
+    
     canvas.remove( this.pathF );
     canvas.remove( this.headF );
     canvas.remove( this.ctrlF );
@@ -871,50 +852,45 @@ const RelationC = (props) => {
 // ********************************************************************* Actions
 // *****************************************************************************
 // Require: FactionC, Faction, 
-var popupElement = document.getElementById( 'fabric_menu' );
-// to prevent 'context menu for showing off
-popupElement.addEventListener( 'contextmenu', function(event) {
-  //console.log( "FabricMenu contextmenu", event.buttons );
-  event.preventDefault();
-  event.stopPropagation();
-},
-                               true /* capture */
-);
-function displayPopup( flag ) {
-  if (flag) {
-    popupElement.style.display = "block";
+function askNewFactionM( posV ) {
+  const gotName = (name) => {
+    newFactionAction( name, posV );
+    removeContextElementC();
   }
-  else {
-    popupElement.style.display = "none";
-  } 
-}
-const factionC = <FactionC
-                   factionM={new FactionM( -1, 'name' )}
-                   mode="add"
-                   pos={{x: 100, y: 100}}
-                   addCallback={newFactionAction}
-                   editCallback={editFactionAction}
-                   setFactionHandle={setFactionFunctor}
-/>;
-ReactDOM.render(
-  factionC,
-  document.getElementById( 'fabric_menu' )
-);
+  const cancelName = () => {
+    removeContextElementC();
+  }
 
-function askNewFactionM( x, y ) {
-  //console.log( 'askN',x,y );
-  popupElement.style.left = x + 'px';
-  popupElement.style.top = y + 'px';
-  setFactionHandle( new FactionM( -1, 'faction_name' ), {x: x, y:y}, "add" );
-  displayPopup( true );
-}
+  showContextElementC( posV.x, posV.y,
+                 <NameFactionC
+                   id="-1"
+                   name="faction_name"
+                   okCbk={gotName}
+                   cancelCbk={cancelName}
+                 />
+  );
+}       
 function askEditFactionL( factionIDX, posV ) {
-  console.log( 'askE',pos );
-  popupElement.style.left = posV.x + 'px';
-  popupElement.style.top = posV.y + 'px';
-  setFactionHandle( _listFactionM[factionIDX], posV, "edit", );
-  displayPopup( true );
+  let factionM = _listFactionM[factionIDX];
+  const editName = (name) => {
+    factionM.name = name;
+    editFactionAction( factionM );
+    removeContextElementC();
+  }
+  const cancelName = () => {
+    removeContextElementC();
+  }
+
+  showContextElementC( posV.x, posV.y,
+                       <NameFactionC
+    id={factionM.idx}
+    name={factionM.name}
+    okCbk={editName}
+    cancelCbk={cancelName}
+    />
+  );
 }
+
 function startRelationFromFactionL( factionIDX, posP ) {
   console.log( 'askNRFF', posP );
   // need to find FactionF related to this factionM
@@ -963,46 +939,15 @@ const NameRelationC = (props) => {
   );
 }
 
-var newPopupE = document.getElementById( 'popup_menu' );
-// to prevent default context menu for showneing off
-newPopupE.addEventListener( 'contextmenu', function(event) {
-  //console.log( "contextMenu contextmenu", event.buttons );
-  event.preventDefault();
-  event.stopPropagation();
-},
-                            true /* capture */
-);
-function displayPopupE( flag ) {
-  if (flag) {
-    newPopupE.style.display = "block";
-  }
-  else {
-    newPopupE.style.display = "none";
-  } 
-}
-
-var _relationE;
 function askNameRelationM( x, y, okCbk, cancelCbk ) {
-  _relationE = document.createElement( "DIV" );
-  newPopupE.appendChild( _relationE );
-  
-  ReactDOM.render(
-    <NameRelationC
-      id="-1"
-      name="relation_name"
-      okCbk={okCbk}
-      cancelCbk={cancelCbk}
-    />,
-    _relationE
+  showContextElementC( x, y,
+                       <NameRelationC
+    id="-1"
+    name="relation_name"
+    okCbk={okCbk}
+    cancelCbk={cancelCbk}
+    />
   );
-  newPopupE.style.left = x + 'px';
-  newPopupE.style.top = y + 'px';
-  displayPopupE( true );
-}
-function removeRelationE() {
-  console.log( "removeRelationE");
-  if (_relationE) _relationE.remove();
-  displayPopupE( false );
 }
 
 function archiveJSONAction() {
@@ -1122,7 +1067,7 @@ const FactionMenu = (props) => {
       <span
         key={index}
         onClick={() =>  {
-          removeContextMenuC();
+          removeContextElementC();
           item.cbk(props.factionIDX, props.pos)
         }}
       >
@@ -1149,7 +1094,7 @@ const ContextMenuC = (props) => {
       <span
         key={index}
         onClick={() =>  {
-          removeContextMenuC();
+          removeContextElementC();
           item.cbk(props.elemIDX, props.pos)
         }}
       >
@@ -1181,41 +1126,42 @@ contextMenuE.addEventListener( 'contextmenu', function(event) {
 function displayContextMenu( flag ) {
   if (flag) {
     contextMenuE.style.display = "block";
+    allSetSelectable( false );
   }
   else {
     contextMenuE.style.display = "none";
+    allSetSelectable( true );
   } 
 }
 
-var _contextMenuE;
-// TODO: remove ?
-// function showFactionContextMenu( factionIDX, x, y) {
-//   showContextMenuC( factionIDX, x, y, "Faction", _factionContextMenu );
-// }
+var _contextPopupE;
 function showContextMenuC( elemIDX, x, y, msg, menuItems ) {
-  console.log( "showContextMenuC", elemIDX, x, y, msg );
-  _contextMenuE = document.createElement( "DIV" );
-  contextMenuE.appendChild( _contextMenuE );
-  _contextMenuE.innerHTML = "CMenu at "+x+"px, ",y+" px";
-  
+  showContextElementC( x, y,
+                       <ContextMenuC
+    elemIDX={elemIDX}
+    pos={{x:x, y:y}}
+    msg={msg}
+    items={menuItems}
+    />
+  );
+}
+function showContextElementC( x, y, elemC ) {
+  console.log( "showContextElementC", x, y, elemC );
+  _contextPopupE = document.createElement( "DIV" );
+  contextMenuE.appendChild( _contextPopupE );
+
   contextMenuE.style.left = x + 'px';
   contextMenuE.style.top = y + 'px';
 
-  ReactDOM.render(
-    <ContextMenuC
-      elemIDX={elemIDX}
-      pos={{x:x, y:y}}
-      msg={msg}
-      items={menuItems}
-    />,
-    _contextMenuE );
+  ReactDOM.render( elemC, _contextPopupE );
   displayContextMenu( true );
 }
 
-function removeContextMenuC() {
-  console.log( "removeContextMenuC");
-  _contextMenuE.remove();
+function removeContextElementC() {
+  console.log( "removeContextElementC");
+  _contextPopupE.remove();
   displayContextMenu( false );
+  setPopable( true );
 }
 // ************************************************************ END Context Menu
 
@@ -1234,6 +1180,8 @@ function startDrawArrow( srcF, mouseP ) {
     selectable: false,
   });
   canvas.add( _lineDA );
+  // cannot select anything
+  allSetSelectable( false );
 }
 function updateDrawArrow( mouseP ) {
   // Update line to mouseP.x/y
@@ -1244,29 +1192,31 @@ function updateDrawArrow( mouseP ) {
 }
 function abortDrawArrow() {
   console.log( "abortDA" );
-  if (_stateDA === "drawing" ) {
-    _stateDA = "none";
-    _srcFDA = null;
-    canvas.remove( _lineDA );
-  }
+  _stateDA = "none";
+  _srcFDA = null;
+  canvas.remove( _lineDA );
+  allSetSelectable( true );
 }
 function endDrawArrow( x, y, itemF ) {
   console.log( "endDA", itemF );
   // check it is a Faction
   if (itemF.model && itemF.model.type === "FactionM" ) {
-    //_stateDA = "none";
+    _stateDA = "none";
 
     // ask for a Name
     const gotName = (name) => {
       console.log( "endARROW => newRelation", name );
       canvas.remove( _lineDA );
       newRelationAction( name, _srcFDA.model, itemF.model );
-      removeRelationE();
+
+      removeContextElementC();
+      allSetSelectable( true );
     }
     const cancelName = () => {
       console.log( "endARROW => abort" );
+
       abortDrawArrow();
-      removeRelationE();
+      removeContextElementC();
     }
     askNameRelationM( x, y, gotName, cancelName );
   }
@@ -1304,7 +1254,7 @@ function getPosF( item ) {
 // *****************************************************************************
 // Require: Action, fabric
 canvas.on( 'mouse:down', function (opt) {
-  console.log( 'D',opt );
+  console.log( 'canvas.mouse:down',opt, _allowPopup );
   if (opt.e.button === 0) {
     if (opt.target === null) {
       // while drawingArrow
@@ -1332,10 +1282,17 @@ canvas.on( 'mouse:down', function (opt) {
         abortDrawArrow();
         return;
       }
-      //use mouseEvent to know absolute position
-      askNewFactionM( opt.e.x, opt.e.y );
-      //opt.e.preventDefault(); // no propagation of mouse event
-      //opt.e.stopPropagation();
+      // if already popping then abort also
+      if ( _allowPopup === false ) {
+        setPopable( true );
+      }
+      else {
+        //use mouseEvent to know absolute position
+        //setPopable( false );
+        askNewFactionM( {x:opt.e.x, y:opt.e.y} );
+        //opt.e.preventDefault(); // no propagation of mouse event
+        //opt.e.stopPropagation();
+      }
     }
     else {
       // a Faction
@@ -1348,9 +1305,11 @@ canvas.on( 'mouse:down', function (opt) {
         }
         // console.log( "RC: ",opt );
         // console.log( "  F:",_listFaction[opt.target.id] );
-        //askEditFactionM( _listFactionM[opt.target.id].model, opt.e.x, opt.e.y );
-        showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
-                          "Faction Menu", _factionContextMenu );
+        if (_allowPopup) {
+          setPopable( false );
+          showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
+                            "Faction Menu", _factionContextMenu );
+        }
       }
       else if (opt.target.elemType === "Relation") {
         // while drawingArrow
@@ -1360,8 +1319,11 @@ canvas.on( 'mouse:down', function (opt) {
         }
 
         // ContextMenu for Relation
-        showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
-                          "Relation Menu", _relationContextMenu );
+        if (_allowPopup) {
+          setPopable( false );
+          showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
+                            "Relation Menu", _relationContextMenu );
+        }
       }
       else {
         console.log( "RClick on ", opt.target );
