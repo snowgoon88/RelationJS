@@ -281,18 +281,21 @@ function delFactionAction( factionIDX ) {
   
   if (_listFactionM[factionIDX]) {
     let factionM = _listFactionM[factionIDX];
-
-    // Remove all Relation to this faction
-    _listRelationM.forEach( (item, index) => {
-      if (item.isRelated( factionM )) {
-        delRelationAction( item.id );
-      }
-    });
-    
-    let itemF = _listFactionM[factionIDX].viewF;
-    removeFromAllSelectable( itemF );
-    canvas.remove( itemF );
-    _listFactionM[factionIDX] = null;
+    if (factionM != null ) {
+      // Remove all Relation to this faction
+      _listRelationM.forEach( (item, index) => {
+        if (item != null) {
+          if (item.isRelated( factionM )) {
+            delRelationActionL( item.id );
+          }
+        }
+      });
+      
+      let itemF = _listFactionM[factionIDX].viewF;
+      removeFromAllSelectable( itemF );
+      canvas.remove( itemF );
+      _listFactionM[factionIDX] = null;
+    }
   }
   else {
     alert( "Cannot delFaction on non-existing faction" );
@@ -332,6 +335,9 @@ class RelationM {
     }
     
     return archive;    
+  }
+  isRelated( factionM ) {
+    return (this.srcM === factionM || this.destM === factionM);
   }
 }
 // ***** to Manage Faction.id
@@ -590,6 +596,9 @@ class RelationF {
     canvas.add( this.ctrlF );
     canvas.add( this.labelF );
   }
+  edit( relationM ) {
+    this.labelF.set( {'text' : relationM.id+': '+relationM.name } );
+  }
   remove() {
     removeFromAllSelectable( this.pathF );
     removeFromAllSelectable( this.ctrlF );
@@ -764,13 +773,21 @@ function findRelationMWith( itemM ) {
   let result = [];
   for( let idx=0; idx < _listRelationM.length; idx++ ) {
     let relationM = _listRelationM[idx];
-    if (relationM.srcM === itemM || relationM.destM === itemM ) {
-      result.push( relationM );
+    if (relationM != null) {
+      if (relationM.srcM === itemM || relationM.destM === itemM ) {
+        result.push( relationM );
+      }
     }
   }
   return result;
 }
-function delRelationAction( relationIDX ) {
+function editRelationActionM( relationM ) {
+  let view = relationM.viewF;
+  view.edit( relationM );
+  _listRelationM[relationM.id] = relationM;
+  canvas.renderAll();
+}
+function delRelationActionL( relationIDX ) {
   console.log( "__delRelation", relationIDX );
 
   if (_listRelationM[relationIDX]) {
@@ -783,9 +800,11 @@ function delRelationAction( relationIDX ) {
 function showAllRelationAction() {
   // make new array with data to archive
   let archiveRelation = _listRelationM.map( (item, index) => {
-    return {
-      relationM: item.toArchive(),
-    };
+    if (item != null) {
+      return {
+        relationM: item.toArchive(),
+      };
+    }
   });
 
   let doc = JSON.stringify( archiveRelation );
@@ -852,21 +871,13 @@ const RelationC = (props) => {
 // ********************************************************************* Actions
 // *****************************************************************************
 // Require: FactionC, Faction, 
-function askNewFactionM( posV ) {
-  const gotName = (name) => {
-    newFactionAction( name, posV );
-    removeContextElementC();
-  }
-  const cancelName = () => {
-    removeContextElementC();
-  }
-
-  showContextElementC( posV.x, posV.y,
+function askNewFactionM( x, y, okCbk, cancelCbk ) {
+  showContextElementC( x, y,
                  <NameFactionC
                    id="-1"
                    name="faction_name"
-                   okCbk={gotName}
-                   cancelCbk={cancelName}
+                   okCbk={okCbk}
+                   cancelCbk={cancelCbk}
                  />
   );
 }       
@@ -898,11 +909,27 @@ function startRelationFromFactionL( factionIDX, posP ) {
   startDrawArrow( factionF, posP );
 }
 function askEditRelationL( relationIDX, posV ) {
-  alert( "askEditRelationL TODO" );
+  let relationM = _listRelationM[relationIDX];
+  const editName = (name) => {
+    relationM.name = name;
+    editRelationActionM( relationM );
+    removeContextElementC();
+  }
+  const cancelName = () => {
+    removeContextElementC();
+  }
+  showContextElementC( posV.x, posV.y,
+                       <NameRelationC
+    id={relationM.idx}
+    name={relationM.name}
+    okCbk={editName}
+    cancelCbk={cancelName}
+    />
+  );
 }
 function askDelRelationL( relationIDX, posV ) {
   // TODO ask for confirmation ?
-  delRelationAction( relationIDX );
+  delRelationActionL( relationIDX );
 }
 
 // *****************************************************************************
@@ -952,18 +979,16 @@ function askNameRelationM( x, y, okCbk, cancelCbk ) {
 
 function archiveJSONAction() {
   // make new array with data to archive
-  let archiveFaction = _listFactionM.map( (item, index) => {
+  let archiveFaction = [];
+  _listFactionM.forEach( (item, index) => {
     if (item) {
-      return {
-        factionA: item.toArchive()
-      }
+      archiveFaction.push( {factionA: item.toArchive()} );
     }
   });
-  let archiveRelation = _listRelationM.map( (item, index) => {
+  let archiveRelation = [];
+  _listRelationM.forEach( (item, index) => {
     if (item) {
-      return {
-        relationA: item.toArchive()
-      }
+      archiveRelation.push( {relationA: item.toArchive()} );
     }
   });
 
@@ -1044,7 +1069,7 @@ var _factionContextMenu = [
   {label:"Edit", cbk:askEditFactionL},
   {label:"New Relation", cbk:startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
-  {label: "TodoDelete", cbk:delFactionAction}
+  {label: "Delete", cbk:delFactionAction}
 ];
 var _relationContextMenu = [
   {label:"Edit", cbk:askEditRelationL},
@@ -1147,6 +1172,7 @@ function showContextMenuC( elemIDX, x, y, msg, menuItems ) {
 }
 function showContextElementC( x, y, elemC ) {
   console.log( "showContextElementC", x, y, elemC );
+  setPopable( false );
   _contextPopupE = document.createElement( "DIV" );
   contextMenuE.appendChild( _contextPopupE );
 
@@ -1284,12 +1310,20 @@ canvas.on( 'mouse:down', function (opt) {
       }
       // if already popping then abort also
       if ( _allowPopup === false ) {
-        setPopable( true );
+        removeContextElementC();
       }
       else {
         //use mouseEvent to know absolute position
-        //setPopable( false );
-        askNewFactionM( {x:opt.e.x, y:opt.e.y} );
+        askNewFactionM( opt.e.x, opt.e.y,
+                        // okCbk
+                        (name) => {
+                          newFactionAction( name, {x:opt.e.x, y:opt.e.y} );
+                          removeContextElementC();
+                        },
+                        // cancelCbk
+                        () => {
+                          removeContextElementC();
+                        });
         //opt.e.preventDefault(); // no propagation of mouse event
         //opt.e.stopPropagation();
       }
@@ -1306,7 +1340,6 @@ canvas.on( 'mouse:down', function (opt) {
         // console.log( "RC: ",opt );
         // console.log( "  F:",_listFaction[opt.target.id] );
         if (_allowPopup) {
-          setPopable( false );
           showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
                             "Faction Menu", _factionContextMenu );
         }
@@ -1320,7 +1353,6 @@ canvas.on( 'mouse:down', function (opt) {
 
         // ContextMenu for Relation
         if (_allowPopup) {
-          setPopable( false );
           showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
                             "Relation Menu", _relationContextMenu );
         }

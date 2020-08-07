@@ -1,5 +1,5 @@
-* [3/4] BUG 
-** TODO askNewFaction s'empile quand on clique dans background
+* [4/4] BUG 
+** DONE askNewFaction s'empile quand on clique dans background
 ** DONE Context Menu s'empilent quand ContextMenu est actif et qu'on re-select
 disable rightclick when already popping out
 ** DONE Quand en train de nommer Relation, peut bouger Faction
@@ -10,7 +10,7 @@ disable rightclick when already popping out
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
 * _CURRENT_ : [[relationMenu]]
-* TODO [6/9] Fabric.js
+* TODO [7/9] Fabric.js
 ** DONE make rectangle + ligne (+arrow head or point)
 ** DONE compute intersection rectangle (bbox)/line (Hori and Ver)
 ** TODO Faction style
@@ -35,11 +35,10 @@ disable rightclick when already popping out
 *** DONE lister
 *** DONE save
 *** DONE load
-** TODO [0/2] Contextual Menu
-*** TODO remove menu if click again background
+** DONE [1/1] Contextual Menu
 *** [1/1] Background
 **** DONE addFaction
-*** [3/4] Faction
+*** [4/4] Faction
 **** DONE Edit
 **** DONE New Relation
 <<relationArrow>> sait choisir src and dest => créer un Relation
@@ -52,11 +51,11 @@ disable rightclick when already popping out
 - label               : OK
 - demander label      : OK
 **** DONE ----
-**** TODO Delete
+**** DONE Delete
 comment effacer toutes les références (sur les Relations)
-*** TODO [2/3] Relation
+*** DONE [3/3] Relation
 <<relationMenu>>
-**** TODO Edit
+**** DONE Edit
 **** DONE ----
 **** DONE Delete
 *** Divers/Archive
