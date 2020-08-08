@@ -7,8 +7,8 @@
     "lib": "lib"
   },
   "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "task": "node ./tasksfile.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "task": "node ./tasksfile.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,16 @@
   },
   "homepage": "https://github.com/snowgoon88/RelationJS#readme",
   "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.1",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-react": "^7.10.4",
     "tasksfile": "^5.1.1"
+  },
+  "dependencies": {
+    "fabric": "^3.6.3",
+    "file-saver": "^2.0.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
   }
 }
