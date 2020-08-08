@@ -66,6 +66,19 @@ comment effacer toutes les références (sur les Relations)
      selection:changed
      editing:entered
      editing:exited
+* NPM
+** init
+Crée un package.json avec des données
+RelationJS>$ npm init
+** installer un package
+Cherche récursivement le 'root' du projet, càd node_modules ou package.json
+Installer localement (si require)
+Installer globalement (pour utiliser)
+avec option --save-dev : uniquement pour le développement
+Et cela génère package-lock.json (à mettre sur git)
+** install tasksfile (Makefile like)
+see https://github.com/pawelgalazka/tasksfile
+créer un fichier tasksfile.js avec les commandes, puis aussi ajouter dans le "scrip" de package.json
 * DONE use Babel 
 npm install --save-dev @babel/preset-react
 RelationJS>$ npx babel src --out-dir lib
