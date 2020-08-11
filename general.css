@@ -17,10 +17,13 @@
 .popup {
     position: absolute;
     /*display: block;      /* hidden by default */
-    display: none;
+    /*display: none;*/
     background-color: lightblue;
     box-sizing : border-box;
     z-index: 2; 
+}
+.hidden {
+    display: none;
 }
 
 /* vertical menu */
@@ -32,3 +35,22 @@
     background-color: #ccc; /* Dark grey background on mouse-over */
 }
 
+/* dropdown */
+.dropdown {
+    min-width: 220px;
+    border: 1px solid #bbb;
+    background-color: #ffffff;
+    padding: 7px 0;
+    margin: 4px 0 0 0;
+}
+.dropdown li {
+    display: block;
+    padding: 4px 14px 4px 14px;
+    text-decoration: none;
+    color: #5778d8; 
+    /*background: transparent;*/
+}
+.dropdown li[patt-selected="true"] {
+    color:  #ffffff;
+    background-color: #5778d8;
+}

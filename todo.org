@@ -9,21 +9,22 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* _CURRENT_ : [[relationMenu]]
-* TODO [7/9] Fabric.js
-** DONE make rectangle + ligne (+arrow head or point)
-** DONE compute intersection rectangle (bbox)/line (Hori and Ver)
-** TODO Faction style
-** TODO arrow + legend between 2 rectangles (bbox)
+* _CURRENT_ : [[reactList]]
+* TODO [3/6] Fabric.js
+** TODO Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
 *** DONE Event click droit
 *** DONE Struct Faction et liste de Faction
 *** DONE Style Faction
 *** DONE React pour new Faction (sur Canvas) ?
-** DONE List all Factions (Btn)
-** DONE Edit Faction name
-** Group with circle and Name
-** Color for Faction
+** TODO Group with circle and Name
+** TODO React Selection in List
+*** multiple
+*** create
+*** (search)
+<<reactList>>
+** [0/1] Person
+*** TODO creation (choix faction) as circle+name
 ** [5/5] Faction
 *** DONE lister
 *** DONE save
