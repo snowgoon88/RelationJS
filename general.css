@@ -13,6 +13,9 @@
     height: 800px;
 }
 
+.icon_container {
+    display: inline-block;
+}
 
 .popup {
     position: absolute;
