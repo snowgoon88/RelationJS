@@ -18,11 +18,11 @@ disable rightclick when already popping out
 *** DONE Style Faction
 *** DONE React pour new Faction (sur Canvas) ?
 ** TODO Group with circle and Name
-** TODO React Selection in List
-*** multiple
-*** create
-*** (search)
+** TODO [1/2] React Selection in List
 <<reactList>>
+*** TODO multiple
+*** create
+*** DONE (search)
 ** [0/1] Person
 *** TODO creation (choix faction) as circle+name
 ** [5/5] Faction
