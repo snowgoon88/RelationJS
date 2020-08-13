@@ -11,15 +11,34 @@ const SelectC = (props) => {
   const [hiddenPopup, setHiddenPopup] = React.useState( true );
   const [options, setOptions] = React.useState( props.options );
   const [idxChoice, setIdxChoice] = React.useState( 0 );
+  const [choices, setChoices] = React.useState( [] );
 
   // reference to input Element, through each instance of Component
   // easier to get value, NEED ref={inputRef} in input DOM
   // TODO usefull 
   const inputRef = React.useRef();
 
-  /* /*const handleChange = (event) => {
-   *   console.log( "SelectC.handleChange", event.target.value );
-   * }/ */
+  // ************************************************************* manageChoices
+  const addToChoices = (label) => {
+    let maxId = choices.reduce( (curMax, curItem) => Math.max(curMax, curItem.id), 0);
+    setChoices( [...choices, {
+      label: label,
+      id: maxId+1,
+    }]
+    );
+  }
+  const removeChoice = (id) => {
+    let tmpChoices = choices.filter( (item) => item.id != id );
+    setChoices( tmpChoices );
+  }
+
+  // ******************************************************************* actions
+  const resetInput = () => {
+    setValue( "" );
+    setHiddenPopup( true );
+  }
+
+  
   const handleChangeText = (event) => {
     console.log( "SelectC.handleChangeText", event.target.value );
     setValue( event.target.value );
@@ -53,6 +72,7 @@ const SelectC = (props) => {
   const handleInput = (inputEvent) => {
     console.log( "SelectC.input", inputEvent.data, inputEvent.target.value );
 
+    setHiddenPopup( false );
     // must update list of options
     // search pattern, case insensitive
     if( inputEvent.target.value.length > 0 ) {
@@ -76,8 +96,11 @@ const SelectC = (props) => {
     console.log( "SelectC.submit" );
     if( idxChoice >= 0 ) {
       console.log( "  valid=", options[idxChoice] );
-      setValue( options[idxChoice] );
-      setHiddenPopup( true );
+      /* setValue( options[idxChoice] );
+       * setHiddenPopup( true ); */
+
+      addToChoices( options[idxChoice] );
+      resetInput();
     }
     else {
       alert( "Invalid choice" );
@@ -92,19 +115,32 @@ const SelectC = (props) => {
   const handlePopup = (event) => {
     setHiddenPopup( hiddenPopup => !hiddenPopup );
   }
-
-  const handleOption = (event, id) => {
-    console.log( "Select.handleOption", id);
-    setIdxChoice( id );
-    setValue( options[id] );
-    setHiddenPopup( true );
+  
+  const handleDeleteChoice = (id) => {
+    console.log( "SelectC.handleDeleteChoice id=",id );
+    removeChoice( id );
+  }
+    
+  const listChoices = choices.map( (item,index) => 
+    <ChoiceC
+      key={item.id}
+      label={item.label}
+      id={item.id}
+      deleteCbk={handleDeleteChoice}
+    />
+  );
+  
+  const handleOptionChoice = (event, id) => {
+    console.log( "Select.handleOptionChoice", id );
+    addToChoices( options[id] );
+    resetInput();
   }
   
   const listOptions = options.map( (item,index) =>
     <li key={index}
         value="{item}"
         patt-selected={index == idxChoice ? "true" : "false"}
-        onClick={(e) => handleOption(e, index)}
+        onClick={(e) => handleOptionChoice(e, index)}
     >
       {item}
     </li>
@@ -130,6 +166,13 @@ const SelectC = (props) => {
     console.log( "SelectC.handleInputFocus" );
     setHiddenPopup( false );
   }
+
+
+  const handleBtnDebug = (event) => {
+    console.log( "__DEBUG" );
+    console.log( "  choices=", choices );
+  }
+  const btnDebug = <button onClick={handleBtnDebug}>DEBUG</button>;
   /* const handleBtnA = (event) => {
    *   // add if missing, otherwise remove
    *   // using operation that create new array, to trigger re-render
@@ -185,7 +228,7 @@ const SelectC = (props) => {
         onSubmit={handleSubmit}
       >
         <div className="input_container">
-          Truc
+          {listChoices}
           <input
           //ref={inputRef}
             type="text"
@@ -204,6 +247,30 @@ const SelectC = (props) => {
           </ul>
         </div>
       </form>
+      {btnDebug}
+    </div>
+  );
+}
+// *****************************************************************************
+// ********************************************************************* ChoiceC
+//
+// props: label, id, deleteCbk(id)
+function ChoiceC(props) {
+
+  const handleDelete = (event) => {
+    props.deleteCbk( props.id )
+  }
+  const deleteIcon =
+    <div onClick={handleDelete}
+         className="icon_container deleter">
+      <svg height="20" width="20" viewBox="0 0 20 20" focusable="false"><path d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"></path></svg>
+    </div>;
+  
+  // render
+  return (
+    <div className="choice_container">
+      <span className="choice_label>">{props.label}</span>
+      {deleteIcon}
     </div>
   );
 }
@@ -220,11 +287,25 @@ function regExpEscape(s) {
 // 
 var _choices = [ "Rouge", "Vert", "Bleu", "Route", "Bouge", "Blouse" ];
 
+const tmpHook = (id) => {
+  console.log( "TMP id=",id );
+}
+
 ReactDOM.render(
-  <SelectC
-    options={_choices}
-    value={""}
-  />,
+  <div>
+    <SelectC
+      options={_choices}
+      value={""}
+    />
+    <div>
+      <ChoiceC
+        label="A effacer"
+        id="3" 
+        deleteCbk={tmpHook}
+      />
+    </div>
+  </div>
+  ,
   document.getElementById( "react_sandbox" )
 );
 
