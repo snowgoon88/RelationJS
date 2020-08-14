@@ -9,8 +9,8 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* _CURRENT_ : [[reactList]]
-* TODO [3/6] Fabric.js
+* _CURRENT_ : Person as dependant on 1.. Factions
+* TODO [4/7] Fabric.js
 ** TODO Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
 *** DONE Event click droit
@@ -18,14 +18,16 @@ disable rightclick when already popping out
 *** DONE Style Faction
 *** DONE React pour new Faction (sur Canvas) ?
 ** TODO Group with circle and Name
-** TODO [2/3] React Selection in List
+** DONE [3/3] React Selection in List
 <<reactList>>
 *** style
-*** TODO not growing (too much) in size
+*** DONE not growing (too much) in size
 *** DONE multiple
 *** create
 *** DONE (search)
+** TODO Creation context menu : Faction, Person
 ** [0/1] Person
+*** creation menu : name, list Faction
 *** TODO creation (choix faction) as circle+name
 ** [5/5] Faction
 *** DONE lister

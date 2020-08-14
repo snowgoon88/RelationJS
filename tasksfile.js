@@ -15,6 +15,11 @@ function cleantags( option ) {
 }
 help( cleantags, 'Remove GTAGS files etc...' )
 
+function build( options ) {
+    sh( 'npx babel src --out-dir lib' )
+}
+help( build, 'Use babel to build .js files' )
+
 function hello(options, name = 'Mysterious') {
   console.log(`Hello ${name}!`)
 }
@@ -23,5 +28,6 @@ function hello(options, name = 'Mysterious') {
 cli({
     hello,
     gtags,
-    cleantags
+    cleantags,
+    build
 })

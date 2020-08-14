@@ -36,6 +36,8 @@ const SelectC = (props) => {
   const resetInput = () => {
     setValue( "" );
     setHiddenPopup( true );
+    setOptions( props.options );
+    setIdxChoice( 0 );
   }
 
   
@@ -50,6 +52,11 @@ const SelectC = (props) => {
   const handleKeyUp = (keyEvent) => {
     console.log( "SelectC.kUp", keyEvent.key, keyEvent.code, keyEvent.keyCode );
 
+    // abort if escape
+    if( keyEvent.key == "Escape" ) {
+      resetInput();
+      return;
+    }
     // move selection idx up or down if visible
     if (hiddenPopup == false) 
       if( keyEvent.key == "ArrowDown") {
@@ -137,13 +144,13 @@ const SelectC = (props) => {
   }
   
   const listOptions = options.map( (item,index) =>
-    <li key={index}
-        value="{item}"
-        patt-selected={index == idxChoice ? "true" : "false"}
-        onClick={(e) => handleOptionChoice(e, index)}
-    >
-      {item}
-    </li>
+      <li key={index}
+          value="{item}"
+          patt-selected={index == idxChoice ? "true" : "false"}
+          onClick={(e) => handleOptionChoice(e, index)}
+      >
+        {item}
+      </li>
   );
   const clearIcon =
     <div onClick={handleCleanup}
@@ -171,6 +178,7 @@ const SelectC = (props) => {
   const handleBtnDebug = (event) => {
     console.log( "__DEBUG" );
     console.log( "  choices=", choices );
+    console.log( "  value=", value );
   }
   const btnDebug = <button onClick={handleBtnDebug}>DEBUG</button>;
   /* const handleBtnA = (event) => {
@@ -218,17 +226,21 @@ const SelectC = (props) => {
   return (
     <div className="select_container"
       //onKeyPress={handleKeyPress}
-      onKeyUp={handleKeyUp}
+         onKeyUp={handleKeyUp}
       //onInput={handleInput}
     >
       {/* <div>
           <button onClick={handleBtnHide}>Hide/show</button>
           </div> */}
-      <form
-        onSubmit={handleSubmit}
-      >
-        <div className="input_container">
-          {listChoices}
+      <div className="all_choices">
+        {listChoices}
+      </div>
+      <div className="input_container">
+
+        <form
+          onSubmit={handleSubmit}
+        >
+          <div>
           <input
           //ref={inputRef}
             type="text"
@@ -240,14 +252,15 @@ const SelectC = (props) => {
           {clearIcon}
           {separatorIcon}
           {popupIcon}
-        </div>
-        <div className={`popup ${hiddenPopup ? "hidden" : ""}`}>
-          <ul className="dropdown">
-            {listOptions}
-          </ul>
-        </div>
-      </form>
-      {btnDebug}
+          </div>
+          <div className={`popup ${hiddenPopup ? "hidden" : ""}`}>
+            <ul className="dropdown">
+              {listOptions}
+            </ul>
+          </div>
+        </form>
+      </div>
+        {btnDebug}
     </div>
   );
 }
@@ -269,7 +282,7 @@ function ChoiceC(props) {
   // render
   return (
     <div className="choice_container">
-      <span className="choice_label>">{props.label}</span>
+      <span className="choice_label">{props.label}</span>
       {deleteIcon}
     </div>
   );

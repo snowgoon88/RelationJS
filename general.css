@@ -24,9 +24,11 @@
 }
 .input_container input {
     border: 0px none;
+    margin: 2px 2px 2px 2px;
 }
 .icon_container {
     display: inline-block;
+    flex: 0 0 auto;
 }
 .icon_separator {
     display: inline-block;;
@@ -49,10 +51,23 @@
     fill: currentcolor;
 }
 
+.all_choice {
+    display: block;
+}
+/* on a line, label SPACE icon */
 .choice_container {
-    display: inline-block;
+    display: flex;
+    justify-content: space-between;
     background-color: rgb(230, 230, 230);
     border-radius: 2px;
+    margin: 2px 2px 2px 2px;
+}
+.choice_container:hover {
+    color: rgb(222, 53, 11);
+}
+.choice_label {
+    flex-grow: 1;
+    margin: 2px 2px 2px 5px;
 }
 
 
