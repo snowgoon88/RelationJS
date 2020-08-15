@@ -1,5 +1,6 @@
-* [4/5] BUG 
-** TODO why ContextPopup is showing at start, bottom left
+* [5/5] BUG 
+** DONE why ContextPopup is showing at start, bottom left
+set to hidden className
 ** DONE askNewFaction s'empile quand on clique dans background
 ** DONE Context Menu s'empilent quand ContextMenu est actif et qu'on re-select
 disable rightclick when already popping out
@@ -12,7 +13,7 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* _CURRENT_ : Person as dependant on 1.. Factions
+* _CURRENT_ : style for Person
 * TODO [5/7] Fabric.js
 ** TODO Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
@@ -29,8 +30,11 @@ disable rightclick when already popping out
 *** create
 *** DONE (search)
 ** DONE Creation context menu : Faction, Person
-** [0/1] Person
-*** creation menu : name, list Faction
+** [2/3] Person
+*** DONE creation menu : name, list Faction
+*** DONE save/load
+*** edit
+*** delete
 *** TODO creation (choix faction) as circle+name
 ** [5/5] Faction
 *** DONE lister
@@ -38,11 +42,12 @@ disable rightclick when already popping out
 *** DONE load
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
-** DONE [3/3] Relation
+** DONE [3/4] Relation
 <<relationIO>>
 *** DONE lister
 *** DONE save
 *** DONE load
+*** TODO Person|Faction -> Person|Faction
 ** DONE [1/1] Contextual Menu
 *** [1/1] Background
 **** DONE addFaction

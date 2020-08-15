@@ -1,12 +1,15 @@
 // *****************************************************************************
 // ********************************************************************* SelectC
+// TODO: better structure passed down from NewPersonC ?
+// in 'choices' = [ {id, label} ], so when signaling up, need to pass only
+// a list of [labels]
 //
-// props: value, options
+// props: value, options, onChange
 // uses: 
 // require:
 
-const SelectC = (props) => {
-  console.log( "SelectC.create" );
+function SelectC(props) {
+  console.log( "SelectC.create, options=", props.options );
   const [value, setValue] = React.useState( props.value );
   const [hiddenPopup, setHiddenPopup] = React.useState( true );
   const [options, setOptions] = React.useState( props.options );
@@ -21,15 +24,17 @@ const SelectC = (props) => {
   // ************************************************************* manageChoices
   const addToChoices = (label) => {
     let maxId = choices.reduce( (curMax, curItem) => Math.max(curMax, curItem.id), 0);
-    setChoices( [...choices, {
+    let tmpChoices = [...choices, {
       label: label,
       id: maxId+1,
-    }]
-    );
+    }];
+    setChoices( tmpChoices );
+    props.onChange( tmpChoices.map( (item,idx) => item.label ));
   }
   const removeChoice = (id) => {
     let tmpChoices = choices.filter( (item) => item.id != id );
     setChoices( tmpChoices );
+    props.onChange( tmpChoices );
   }
 
   // ******************************************************************* actions
@@ -298,30 +303,30 @@ function regExpEscape(s) {
 // *****************************************************************************
 // **************************************************************** TEST SelectC
 // 
-var _choices = [ "Rouge", "Vert", "Bleu", "Route", "Bouge", "Blouse" ];
-
-const tmpHook = (id) => {
-  console.log( "TMP id=",id );
-}
-
-ReactDOM.render(
-  <div>
-    <SelectC
-      options={_choices}
-      value={""}
-    />
-    <div>
-      <ChoiceC
-        label="A effacer"
-        id="3" 
-        deleteCbk={tmpHook}
-      />
-    </div>
-  </div>
-  ,
-  document.getElementById( "react_sandbox" )
-);
-
+/* var _choices = [ "Rouge", "Vert", "Bleu", "Route", "Bouge", "Blouse" ];
+ * 
+ * const tmpHook = (id) => {
+ *   console.log( "TMP id=",id );
+ * }
+ * 
+ * ReactDOM.render(
+ *   <div>
+ *     <SelectC
+ *       options={_choices}
+ *       value={""}
+ *     />
+ *     <div>
+ *       <ChoiceC
+ *         label="A effacer"
+ *         id="3" 
+ *         deleteCbk={tmpHook}
+ *       />
+ *     </div>
+ *   </div>
+ *   ,
+ *   document.getElementById( "react_sandbox" )
+ * );
+ *  */
 
 /* <svg height="20" width="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false" class="css-6q0nyr-Svg"><path d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"></path></svg> */
 

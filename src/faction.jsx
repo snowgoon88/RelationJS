@@ -96,7 +96,7 @@ function makeNewFactionM( name ) {
 }
 function makeNewFactionIdM( id, name ) {
   if (id < _idmax_faction) {
-    alert( "Cannot make new faction with improper id ("+id+")" );
+    alert( "Cannot make new Faction with improper id ("+id+")" );
     return;
   }
   var nf = new FactionM( id, name );
@@ -310,7 +310,207 @@ function delFactionActionL( dummyV, factionIDX ) {
     alert( "Cannot delFaction on non-existing faction" );
   }
 }
+function findFactionMwithName( name ) {
+  return _listFactionM.find( (item,idx) => item.name == name );
+}
 // *********************************************************** END - ListFaction
+
+// *****************************************************************************
+// ********************************************************************* PersonM
+class PersonM {
+  constructor( id, name, listFactionM ) {
+    console.log( "new PersonM name=",name," listF=",listFactionM );
+    this.id = id;
+    this.name = name;
+    this.factionsM = listFactionM;
+    this.type = 'PersonM';
+    this.viewF = null;
+  }
+  strDisplay() {
+    let display = 'P['+this.id+']: '+this.name;
+    return display;
+  }
+  toArchive() {
+    var archive = {
+      id: this.id,
+      name: this.name,
+      listFactionID: this.factionsM.map( (item,index) => item.id ),
+    };
+    if (this.viewF) {
+      archive['viewInfo'] = this.viewF.toArchive();
+    }
+    else {
+      archive['viewInfo'] = null;
+    }
+    
+    return archive;    
+  }
+}
+// ***** to Manage Faction.id
+var _idmax_person = 0;
+function makeNewPersonM( name, listFactionM ) {
+  return makeNewPersonIdM( _idmax_person, name, listFactionM );
+}
+function makeNewPersonIdM( id, name, listFactionM ) {
+  if (id < _idmax_person) {
+    alert( "Cannot make new Person with improper id ("+id+")" );
+    return;
+  }
+  var np = new PersonM( id, name, listFactionM );
+  _idmax_person = id+1;
+
+  return np;
+}
+// *************************************************************** END - PersonM
+
+// *****************************************************************************
+// ********************************************************************* PersonF
+// TODO: add colored circles
+class PersonF {
+  constructor( personM, posV ) {
+    let colRGBA = 'rgba( 0, 255, 0, 0.2)';
+    this.id = personM.id;
+    this.model = personM;
+    this.elemType = 'Person';
+
+    // FabricJS elements
+    this.labelF = new fabric.Text( 'P'+personM.id+': '+personM.name, {
+      id: personM.id,
+      model: personM,
+      elemType: "Person",
+
+      originX: 'center',
+      originY: 'center',
+      left: posV.x,
+      top: posV.y,
+      fontSize: 20,
+      textBackgroundColor: colRGBA,
+      copyTextBackgroundColor: colRGBA,
+      highlightBackgroundColor: _colHiglightRGBA,
+      hasRotatingPoint: false,
+      lockRotation: true,
+      lockScalingX: true,
+      lockSclaingY: true,
+      lockSkewingX: true,
+      lockSkewingY: true,
+      padding: 10,
+    });
+    this.labelF.on( 'mouseover', (opt) => {
+      //console.log( 'MOver' );
+      this.labelF.set( {'textBackgroundColor': this.labelF.highlightBackgroundColor} );
+      canvas.requestRenderAll();
+    });
+    this.labelF.on( 'mouseout', (opt) => {
+      //console.log( 'MOut' );
+      this.labelF.set( {'textBackgroundColor': this.labelF.copyTextBackgroundColor} );
+      canvas.requestRenderAll();
+    });
+
+    _allSelectableF.push( this.labelF );
+    personM.viewF = this;
+    // TODO check this is legit ?
+    
+    canvas.add( this.labelF );
+  }
+  edit( personM ) {
+    this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
+  }
+  remove() {
+    removeFromAllSelectable( this.labelF );
+    
+    canvas.remove( this.labelF );
+  }
+  toArchive() {
+    var archive = {
+      pos: {x: this.labelF.left, y: this.labelF.top}
+    };
+    return archive;
+  }
+}
+// *************************************************************** END - PersonF
+
+// *****************************************************************************
+// ***************************************************************** ListPersonM
+var _listPersonM = [];
+function newPersonAction( name, posV, listFactionM ) {
+  var npM = makeNewPersonM( name, listFactionM );
+  var npF = new PersonF( npM, posV );
+  npM.viewF = npF;
+  _listPersonM.push( npM );
+}
+function addPersonActionA( personA ) {
+  console.log( "addPersonActionA", personA );
+  if (personA.id < 0) {
+    alert( "Cannot add Person with improper id ("+personA.id+")" );
+    return;
+  }
+  if (_listPersonM[personA.id]) {
+    alert( "Cannot add Person over existing one (id="+personA.id+")" );
+    return;
+  }
+
+  let listFactions = personA.listFactionID.map( (item,idx) =>
+    _listFactionM[item] );
+
+  var npM = makeNewPersonIdM( personA.id, personA.name, listFactions );
+  var npF = new PersonF( npM, personA.viewInfo.pos );
+  npM.viewF = npF;
+  _listPersonM.push( npM );
+}
+// *********************************************************** END - ListPersonM
+
+// *****************************************************************************
+// ****************************************************************** NewPersonC
+// PROPS: id, name, okCbk, cancelCbk
+const NewPersonC = (props) => {
+  const [name, setName] = React.useState( props.name );
+  const [factions, setFactions] = React.useState( [] );
+  
+  const handleBtnOK = () => {
+    props.okCbk( name, factions );
+  }
+  const handleBtnCancel = () => {
+    props.cancelCbk();
+  }
+
+  const handleChange = (listFactions) => {
+    console.log( "NewPersonC.handleChange", listFactions );
+    setFactions( listFactions );
+  }
+  
+  var buttonOK = <button onClick={handleBtnOK}>Ok</button>;
+  var buttonCancel = <button onClick={handleBtnCancel}>Cancel</button>;
+
+  // render
+  return (
+    <div>
+      <fieldset>
+        <legend>Person ({props.id}) </legend>
+        <table>
+          <tbody>
+            <TextCellC
+              title="Name"
+              setValue={setName}
+              value={name}
+            />
+            <tr>
+              <td><label>Factions : </label></td>
+              <td>
+                <SelectC
+                  options={_listFactionM.map( (item,idx) => item.name )}
+                  value=""
+                  onChange={setFactions}
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+      {buttonOK}{buttonCancel}
+    </div>
+  );
+}
+// ************************************************************ END - NewPersonC
 
 // *****************************************************************************
 // ******************************************************************* RelationM
@@ -358,7 +558,7 @@ function makeNewRelationIdM( id, name, srcFactionM, destFactionM ) {
   console.log( "makeNewRelation ", id, name, srcFactionM, destFactionM );
 
   if (id < _idmax_relation) {
-    alert( "Cannot make new relation with improper id ("+id+")" );
+    alert( "Cannot make new Relation with improper id ("+id+")" );
     return;
   }
   var nr = new RelationM( id, name, srcFactionM, destFactionM);
@@ -879,7 +1079,7 @@ const RelationC = (props) => {
 // *****************************************************************************
 // Require: FactionC, Faction, 
 function askNewFactionM( posV, dummyObj ) {
-  console.log( "newaskNewFactionM ", posV, dummyObj );
+  console.log( "askNewFactionM ", posV, dummyObj );
   const gotNameCbk = (name) => {
     newFactionAction( name, posV );
     removeContextElementC();
@@ -896,7 +1096,25 @@ function askNewFactionM( posV, dummyObj ) {
   );
 }
 const askNewPersonM = ( posV, dummyObj ) => {
-  alert( "TODO implement askNewPerson");
+  console.log( "askNewPersonM ", posV, dummyObj );
+  
+  const gotInfoCbk = (name, factions) => {
+    newPersonAction( name, posV,
+                     factions.map( (item,idx) => findFactionMwithName(item) )
+    );
+    removeContextElementC();
+  }
+
+  const cancelCbk = removeContextElementC;
+
+  showContextElementC( posV,
+                       <NewPersonC
+                         id="-1"
+                         name="person_name"
+                         okCbk={gotInfoCbk}
+                         cancelCbk={cancelCbk}
+                       />
+  );
 }
 /* function askNewFactionM( x, y, okCbk, cancelCbk ) {
  *   showContextElementC( x, y,
@@ -1012,6 +1230,12 @@ function archiveJSONAction() {
       archiveFaction.push( {factionA: item.toArchive()} );
     }
   });
+  let archivePerson = [];
+  _listPersonM.forEach( (item, index) => {
+    if (item) {
+      archivePerson.push( {personA: item.toArchive()} );
+    }
+  });
   let archiveRelation = [];
   _listRelationM.forEach( (item, index) => {
     if (item) {
@@ -1021,6 +1245,7 @@ function archiveJSONAction() {
 
   let archive = {
     factions: archiveFaction,
+    persons: archivePerson,
     relations: archiveRelation
   };
   let doc = JSON.stringify( archive );
@@ -1038,19 +1263,34 @@ function populateAllFromJSONAction( doc ) {
   let archive = JSON.parse( doc );
 
   let archiveFaction = archive.factions;
-  archiveFaction.forEach( (item, index) => {
-    console.log( "["+index+"]=",item );
-    if (item.factionA.viewInfo) {
-      console.log( "populate with", item.factionA );
-      addFactionActionA( item.factionA );//DEL, item.factionA.viewInfo.pos );
-      console.log( "_listFactionM size=",_listFactionM.length, _idmax_faction );
-    }
-    else {
-      alert( "Populate Faction from factionA without viewInfo" );
-      return;
-    }
-  });
-
+  if( archiveFaction ) {
+    archiveFaction.forEach( (item, index) => {
+      console.log( "["+index+"]=",item );
+      if (item.factionA.viewInfo) {
+        console.log( "populate with", item.factionA );
+        addFactionActionA( item.factionA );//DEL, item.factionA.viewInfo.pos );
+        console.log( "_listFactionM size=",_listFactionM.length, _idmax_faction );
+      }
+      else {
+        alert( "Populate Faction from factionA without viewInfo" );
+        return;
+      }
+    });
+}
+  let archivePerson = archive.persons;
+  if( archivePerson ) {
+    archivePerson.forEach( (item, index) => {
+      console.log( "["+index+"]=",item );
+      if (item.personA.viewInfo) {
+        addPersonActionA( item.personA );
+      }
+      else {
+        alert( "Populate Faction from factionA without viewInfo" );
+        return;
+      }
+    });
+  }
+  
   let archiveRelation = archive.relations;
   archiveRelation.forEach( (item, index) => {
     console.log( "["+index+"]=",item );
