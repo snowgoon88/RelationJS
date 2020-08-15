@@ -1,4 +1,12 @@
 // *****************************************************************************
+// ************************************************** function naming convention
+// show...C( posV, idx/obj, arg )           - showComponentC at posV
+// ask...X( posV, idx/obj )                 - ask Dialog at posV
+// ...ActionM/L/A/_( objM/idxL/objA/other ) - do Action on objM/idxL/other
+// funcMenuCbk( posV, obj )                 - any fonc used as menu callback
+// *****************************************************************************
+
+// *****************************************************************************
 // ************************************************************************ Event
 // debug Event at body level -> look at target
 var bodyElement = document.getElementsByTagName("BODY")[0];
@@ -247,14 +255,14 @@ const NameFactionC = (props) => {
 // *****************************************************************************
 // ***************************************************************** ListFaction
 // *****************************************************************************
-// Require: FactionM, canvas (fabric)
+// Require: FactionM, FactionF, canvas (fabric)
 var _listFactionM = [];
 function newFactionAction( name, posV ) {
   var newM = makeNewFactionM( name );
   var newF = addFactionF( newM, posV, [0,0,255] );
   _listFactionM.push( newM );
 }
-function addFactionAction( factionA ) {
+function addFactionActionA( factionA ) {
   console.log( "addFactionAction", factionA );
   if (factionA.id < 0) {
     alert( "Cannot addFaction with improper id ("+factionA.id+")" );
@@ -270,13 +278,14 @@ function addFactionAction( factionA ) {
   var newF = addFactionF( newM, posV, [0,0,255] );
   _listFactionM.push( newM );
 }
-function editFactionAction( factionM ) {
+function editFactionActionM( factionM ) {
   let view = _listFactionM[factionM.id].viewF;
   editFactionF( view, factionM );
   _listFactionM[factionM.id] = factionM;
   canvas.renderAll();
 }
-function delFactionAction( factionIDX ) {
+// used as menu callback,  so (posV, idx)
+function delFactionActionL( dummyV, factionIDX ) {
   console.log( "__delFaction", factionIDX );
   
   if (_listFactionM[factionIDX]) {
@@ -748,8 +757,8 @@ function newRelationAction( name, srcM, destM ) {
   canvas.discardActiveObject();
   nrF.setActive();
 }
-function addRelationAction( relationA ) {
-  console.log( "addRelationAction", relationA );
+function addRelationActionA( relationA ) {
+  console.log( "addRelationActionA", relationA );
   if (relationA.id < 0) {
     alert( "Cannot addRelation with improper id ("+relationA.id+")" );
     return;
@@ -812,8 +821,6 @@ function showAllRelationAction() {
   console.log( doc );
   return doc;
 }
-
-
 // ********************************************************* END - ListRelationM
 
 // *****************************************************************************
@@ -871,15 +878,15 @@ const RelationC = (props) => {
 // ********************************************************************* Actions
 // *****************************************************************************
 // Require: FactionC, Faction, 
-function newaskNewFactionM( obj, posV ) {
-  console.log( "newaskNewFactionM ", obj, posV );
+function askNewFactionM( posV, dummyObj ) {
+  console.log( "newaskNewFactionM ", posV, dummyObj );
   const gotNameCbk = (name) => {
-    newFactionAction( name, {x:posV.x, y:posV.y} );
+    newFactionAction( name, posV );
     removeContextElementC();
   }
   const cancelCbk = removeContextElementC;
 
-  showContextElementC( posV.x, posV.y,
+  showContextElementC( posV,
                  <NameFactionC
                    id="-1"
                    name="faction_name"
@@ -888,31 +895,31 @@ function newaskNewFactionM( obj, posV ) {
                  />
   );
 }
-const askNewPersonM = ( x, y ) => {
+const askNewPersonM = ( posV, dummyObj ) => {
   alert( "TODO implement askNewPerson");
 }
-function askNewFactionM( x, y, okCbk, cancelCbk ) {
-  showContextElementC( x, y,
-                 <NameFactionC
-                   id="-1"
-                   name="faction_name"
-                   okCbk={okCbk}
-                   cancelCbk={cancelCbk}
-                 />
-  );
-}       
-function askEditFactionL( factionIDX, posV ) {
+/* function askNewFactionM( x, y, okCbk, cancelCbk ) {
+ *   showContextElementC( x, y,
+ *                  <NameFactionC
+ *                    id="-1"
+ *                    name="faction_name"
+ *                    okCbk={okCbk}
+ *                    cancelCbk={cancelCbk}
+ *                  />
+ *   );
+ * }     */   
+function askEditFactionL( posV, factionIDX ) {
   let factionM = _listFactionM[factionIDX];
   const editName = (name) => {
     factionM.name = name;
-    editFactionAction( factionM );
+    editFactionActionM( factionM );
     removeContextElementC();
   }
   const cancelName = () => {
     removeContextElementC();
   }
 
-  showContextElementC( posV.x, posV.y,
+  showContextElementC( posV,
                        <NameFactionC
     id={factionM.idx}
     name={factionM.name}
@@ -921,14 +928,14 @@ function askEditFactionL( factionIDX, posV ) {
     />
   );
 }
-
-function startRelationFromFactionL( factionIDX, posP ) {
-  console.log( 'askNRFF', posP );
+// used as a Menu Callback, so (posV, obj )
+function startRelationFromFactionL( posV, factionIDX ) {
+  console.log( 'askNRFF', posV );
   // need to find FactionF related to this factionM
   let factionF = _listFactionM[factionIDX].viewF;
-  startDrawArrow( factionF, posP );
+  startDrawArrow( factionF, posV );
 }
-function askEditRelationL( relationIDX, posV ) {
+function askEditRelationL( posV, relationIDX ) {
   let relationM = _listRelationM[relationIDX];
   const editName = (name) => {
     relationM.name = name;
@@ -938,7 +945,7 @@ function askEditRelationL( relationIDX, posV ) {
   const cancelName = () => {
     removeContextElementC();
   }
-  showContextElementC( posV.x, posV.y,
+  showContextElementC( posV,
                        <NameRelationC
     id={relationM.idx}
     name={relationM.name}
@@ -947,7 +954,7 @@ function askEditRelationL( relationIDX, posV ) {
     />
   );
 }
-function askDelRelationL( relationIDX, posV ) {
+function askDelRelationL( posV, relationIDX ) {
   // TODO ask for confirmation ?
   delRelationActionL( relationIDX );
 }
@@ -986,8 +993,8 @@ const NameRelationC = (props) => {
   );
 }
 
-function askNameRelationM( x, y, okCbk, cancelCbk ) {
-  showContextElementC( x, y,
+function askNameRelationM( posV, okCbk, cancelCbk ) {
+  showContextElementC( posV,
                        <NameRelationC
     id="-1"
     name="relation_name"
@@ -1035,7 +1042,7 @@ function populateAllFromJSONAction( doc ) {
     console.log( "["+index+"]=",item );
     if (item.factionA.viewInfo) {
       console.log( "populate with", item.factionA );
-      addFactionAction( item.factionA, item.factionA.viewInfo.pos );
+      addFactionActionA( item.factionA, item.factionA.viewInfo.pos );
       console.log( "_listFactionM size=",_listFactionM.length, _idmax_faction );
     }
     else {
@@ -1048,7 +1055,7 @@ function populateAllFromJSONAction( doc ) {
   archiveRelation.forEach( (item, index) => {
     console.log( "["+index+"]=",item );
     if (item.relationA.viewInfo) {
-      addRelationAction( item.relationA );
+      addRelationActionA( item.relationA );
     }
     else {
       alert( "Populate Faction from factionA without viewInfo" );
@@ -1086,14 +1093,14 @@ const handleDummy = ( obj, pos ) => {
   console.log( "DUMMY", obj, pos );
 }
 var _createContextMenu = [
-  {label:"New Faction", cbk:newaskNewFactionM}, //( x, y, okCbk, cancelCbk )},
+  {label:"New Faction", cbk:askNewFactionM}, //( x, y, okCbk, cancelCbk )},
   {label:"New Person", cbk:askNewPersonM}   // ??
 ];
 var _factionContextMenu = [
   {label:"Edit", cbk:askEditFactionL},
   {label:"New Relation", cbk:startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
-  {label: "Delete", cbk:delFactionAction} // TODO ask ?
+  {label: "Delete", cbk:delFactionActionL} // TODO ask ?
 ];
 var _relationContextMenu = [
   {label:"Edit", cbk:askEditRelationL},
@@ -1116,7 +1123,7 @@ const CreationMenu = (props) => {
         key={index}
         onClick={() =>  {
           removeContextElementC();
-          item.cbk(props.pos.x, props.pos.y)
+          item.cbk( props.pos, null )
         }}
       >
         {item.label}
@@ -1147,7 +1154,7 @@ const FactionMenu = (props) => {
         key={index}
         onClick={() =>  {
           removeContextElementC();
-          item.cbk(props.factionIDX, props.pos)
+          item.cbk( props.pos, props.factionIDX )
         }}
       >
         {item.label}
@@ -1174,7 +1181,7 @@ const ContextMenuC = (props) => {
         key={index}
         onClick={() =>  {
           removeContextElementC();
-          item.cbk(props.elemIDX, props.pos)
+          item.cbk( props.pos, props.elemIDX )
         }}
       >
         {item.label}
@@ -1214,24 +1221,24 @@ function displayContextMenu( flag ) {
 }
 
 var _contextPopupE;
-function showContextMenuC( elemIDX, x, y, msg, menuItems ) {
-  showContextElementC( x, y,
+function showContextMenuC( posV, elemIDX, msg, menuItems ) {
+  showContextElementC( posV,
                        <ContextMenuC
     elemIDX={elemIDX}
-    pos={{x:x, y:y}}
+    pos={posV}
     msg={msg}
     items={menuItems}
     />
   );
 }
-function showContextElementC( x, y, elemC ) {
-  console.log( "showContextElementC", x, y, elemC );
+function showContextElementC( posV, elemC ) {
+  console.log( "showContextElementC", posV, elemC );
   setPopable( false );
   _contextPopupE = document.createElement( "DIV" );
   contextMenuE.appendChild( _contextPopupE );
 
-  contextMenuE.style.left = x + 'px';
-  contextMenuE.style.top = y + 'px';
+  contextMenuE.style.left = posV.x + 'px';
+  contextMenuE.style.top = posV.y + 'px';
 
   ReactDOM.render( elemC, _contextPopupE );
   displayContextMenu( true );
@@ -1251,11 +1258,11 @@ function removeContextElementC() {
 var _stateDA = "none"; // none | drawing
 var _srcFDA = null;
 var _lineDA;
-function startDrawArrow( srcF, mouseP ) {
+function startDrawArrow( srcF, mouseV ) {
   _stateDA = "drawing";
   _srcFDA = srcF;
   // Create a new line from srcF.left/top to mouseP.x/y
-  _lineDA = new fabric.Line( [srcF.left, srcF.top, mouseP.x, mouseP.y ], {
+  _lineDA = new fabric.Line( [srcF.left, srcF.top, mouseV.x, mouseV.y ], {
     stroke: 'red',
     selectable: false,
   });
@@ -1263,9 +1270,9 @@ function startDrawArrow( srcF, mouseP ) {
   // cannot select anything
   allSetSelectable( false );
 }
-function updateDrawArrow( mouseP ) {
+function updateDrawArrow( mouseV ) {
   // Update line to mouseP.x/y
-  _lineDA.set( {'x2': mouseP.x, 'y2': mouseP.y} );
+  _lineDA.set( {'x2': mouseV.x, 'y2': mouseV.y} );
   //_lineDA.setCoords();
   //_lineDA.set('dirty', true);
   canvas.requestRenderAll();
@@ -1298,7 +1305,7 @@ function endDrawArrow( x, y, itemF ) {
       abortDrawArrow();
       removeContextElementC();
     }
-    askNameRelationM( x, y, gotName, cancelName );
+    askNameRelationM( new Vec(x, y), gotName, cancelName );
   }
   else {
     return abortDrawArrow();
@@ -1368,7 +1375,7 @@ canvas.on( 'mouse:down', function (opt) {
       }
       else {
         //use mouseEvent to know absolute position
-        showContextMenuC( null, opt.e.x, opt.e.y,
+        showContextMenuC( new Vec(opt.e.x, opt.e.y), null, 
                             "Creation Menu", _createContextMenu );
         /* askNewFactionM( opt.e.x, opt.e.y,
          *                 // okCbk
@@ -1396,7 +1403,7 @@ canvas.on( 'mouse:down', function (opt) {
         // console.log( "RC: ",opt );
         // console.log( "  F:",_listFaction[opt.target.id] );
         if (_allowPopup) {
-          showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
+          showContextMenuC( new Vec(opt.e.x, opt.e.y), opt.target.id,
                             "Faction Menu", _factionContextMenu );
         }
       }
@@ -1409,7 +1416,7 @@ canvas.on( 'mouse:down', function (opt) {
 
         // ContextMenu for Relation
         if (_allowPopup) {
-          showContextMenuC( opt.target.id, opt.e.x, opt.e.y,
+          showContextMenuC( new Vec(opt.e.x, opt.e.y), opt.target.id,
                             "Relation Menu", _relationContextMenu );
         }
       }

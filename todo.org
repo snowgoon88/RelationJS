@@ -4,8 +4,8 @@
 disable rightclick when already popping out
 ** DONE Quand en train de nommer Relation, peut bouger Faction
 ** DONE Après load factions, create faction has id 0 !! (not max)
-* [4/5] UPD
-** TODO uniform x,y vs pos, especially in menu, ask, action
+* [5/5] UPD
+** DONE uniform x,y vs pos, especially in menu, ask, action
 ** DONE All Popup using the same mecanism, popupElement
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
