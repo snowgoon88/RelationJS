@@ -1042,7 +1042,7 @@ function populateAllFromJSONAction( doc ) {
     console.log( "["+index+"]=",item );
     if (item.factionA.viewInfo) {
       console.log( "populate with", item.factionA );
-      addFactionActionA( item.factionA, item.factionA.viewInfo.pos );
+      addFactionActionA( item.factionA );//DEL, item.factionA.viewInfo.pos );
       console.log( "_listFactionM size=",_listFactionM.length, _idmax_faction );
     }
     else {
