@@ -4,13 +4,14 @@
 disable rightclick when already popping out
 ** DONE Quand en train de nommer Relation, peut bouger Faction
 ** DONE Après load factions, create faction has id 0 !! (not max)
-* [4/4] UPD
+* [4/5] UPD
+** TODO uniform x,y vs pos, especially in menu, ask, action
 ** DONE All Popup using the same mecanism, popupElement
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
 * _CURRENT_ : Person as dependant on 1.. Factions
-* TODO [4/7] Fabric.js
+* TODO [5/7] Fabric.js
 ** TODO Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
 *** DONE Event click droit
@@ -25,7 +26,7 @@ disable rightclick when already popping out
 *** DONE multiple
 *** create
 *** DONE (search)
-** TODO Creation context menu : Faction, Person
+** DONE Creation context menu : Faction, Person
 ** [0/1] Person
 *** creation menu : name, list Faction
 *** TODO creation (choix faction) as circle+name

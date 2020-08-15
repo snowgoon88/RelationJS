@@ -871,6 +871,26 @@ const RelationC = (props) => {
 // ********************************************************************* Actions
 // *****************************************************************************
 // Require: FactionC, Faction, 
+function newaskNewFactionM( obj, posV ) {
+  console.log( "newaskNewFactionM ", obj, posV );
+  const gotNameCbk = (name) => {
+    newFactionAction( name, {x:posV.x, y:posV.y} );
+    removeContextElementC();
+  }
+  const cancelCbk = removeContextElementC;
+
+  showContextElementC( posV.x, posV.y,
+                 <NameFactionC
+                   id="-1"
+                   name="faction_name"
+                   okCbk={gotNameCbk}
+                   cancelCbk={cancelCbk}
+                 />
+  );
+}
+const askNewPersonM = ( x, y ) => {
+  alert( "TODO implement askNewPerson");
+}
 function askNewFactionM( x, y, okCbk, cancelCbk ) {
   showContextElementC( x, y,
                  <NameFactionC
@@ -1065,11 +1085,15 @@ function readAllFromFileAction( file ) {
 const handleDummy = ( obj, pos ) => {
   console.log( "DUMMY", obj, pos );
 }
+var _createContextMenu = [
+  {label:"New Faction", cbk:newaskNewFactionM}, //( x, y, okCbk, cancelCbk )},
+  {label:"New Person", cbk:askNewPersonM}   // ??
+];
 var _factionContextMenu = [
   {label:"Edit", cbk:askEditFactionL},
   {label:"New Relation", cbk:startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
-  {label: "Delete", cbk:delFactionAction}
+  {label: "Delete", cbk:delFactionAction} // TODO ask ?
 ];
 var _relationContextMenu = [
   {label:"Edit", cbk:askEditRelationL},
@@ -1077,8 +1101,38 @@ var _relationContextMenu = [
   {label: "Delete", cbk:askDelRelationL}
 ]
 
+
+// Creation Menu
+// call cbk( pos )
+const CreationMenu = (props) => {
+
+  // Build menu Items
+  const listItems = props.items.map( (item, index) => {
+    if (item.label === "<hr>") {
+      return(<hr key={index}/>);
+    }
+    return (
+      <span
+        key={index}
+        onClick={() =>  {
+          removeContextElementC();
+          item.cbk(props.pos.x, props.pos.y)
+        }}
+      >
+        {item.label}
+      </span>
+    );
+  });
+
+  return (
+    <div className="vertical_menu">
+    {listItems}
+    </div>
+  );
+}
+
 // FactionM, pos (x,y), 
-// items = [ {label, cnk] OR {label:"<hr>", cbk:null} for sep ]
+// items = [ {label, cbk] OR {label:"<hr>", cbk:null} for sep ]
 //
 // will call cbk( factionM, pos )
 const FactionMenu = (props) => {
@@ -1314,16 +1368,18 @@ canvas.on( 'mouse:down', function (opt) {
       }
       else {
         //use mouseEvent to know absolute position
-        askNewFactionM( opt.e.x, opt.e.y,
-                        // okCbk
-                        (name) => {
-                          newFactionAction( name, {x:opt.e.x, y:opt.e.y} );
-                          removeContextElementC();
-                        },
-                        // cancelCbk
-                        () => {
-                          removeContextElementC();
-                        });
+        showContextMenuC( null, opt.e.x, opt.e.y,
+                            "Creation Menu", _createContextMenu );
+        /* askNewFactionM( opt.e.x, opt.e.y,
+         *                 // okCbk
+         *                 (name) => {
+         *                   newFactionAction( name, {x:opt.e.x, y:opt.e.y} );
+         *                   removeContextElementC();
+         *                 },
+         *                 // cancelCbk
+         *                 () => {
+         *                   removeContextElementC();
+         *                 }); */
         //opt.e.preventDefault(); // no propagation of mouse event
         //opt.e.stopPropagation();
       }
