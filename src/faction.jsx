@@ -375,54 +375,94 @@ class PersonF {
 
     // FabricJS elements
     this.labelF = new fabric.Text( 'P'+personM.id+': '+personM.name, {
-      id: personM.id,
-      model: personM,
-      elemType: "Person",
+      /* id: personM.id,
+       * model: personM,
+       * elemType: "Person", */
 
-      originX: 'center',
+      //originX: 'center',
       originY: 'center',
-      left: posV.x,
+      left: posV.x+20,
       top: posV.y,
       fontSize: 20,
       textBackgroundColor: colRGBA,
       copyTextBackgroundColor: colRGBA,
       highlightBackgroundColor: _colHiglightRGBA,
+      
+      padding: 10,
+    });
+
+    // Colored Pie for Factions
+    let tmpColor = [ 'red', 'blue', 'green' ];//, 'black' ];
+    let angle = Math.PI * 2 / tmpColor.length;
+    let startAngle = -Math.PI / 2.0;
+    console.log( "  PersonF pieAngle=", angle, angle/Math.PI*180.0 );
+    this.pieF = [];
+    // The trick is to draw a circle with large stroke. Filling does not
+    // work as it draws arcs.
+    tmpColor.forEach( (item,idx) => {
+      let tmpSliceOfPieF = new fabric.Circle( {
+        originX: 'center',
+        originY: 'center',
+        left: posV.x,
+        top: posV.y,
+        radius: 5,
+        startAngle: startAngle,
+        endAngle: startAngle + angle,
+        stroke : item,
+        strokeWidth: 10,
+        //fill : item,
+       
+      });
+      this.pieF.push( tmpSliceOfPieF );
+
+      startAngle += angle;
+    });
+
+    this.pieF.push( this.labelF )
+    this.groupF = new fabric.Group( this.pieF, {
+      originX: 'center',
+      originY: 'center',
+      left: posV.x,
+      top: posV.y,
+
+      id: personM.id,
+      model: personM,
+      elemType: "Person",
+
       hasRotatingPoint: false,
       lockRotation: true,
       lockScalingX: true,
       lockSclaingY: true,
       lockSkewingX: true,
       lockSkewingY: true,
-      padding: 10,
     });
-    this.labelF.on( 'mouseover', (opt) => {
+    this.groupF.on( 'mouseover', (opt) => {
       //console.log( 'MOver' );
       this.labelF.set( {'textBackgroundColor': this.labelF.highlightBackgroundColor} );
       canvas.requestRenderAll();
     });
-    this.labelF.on( 'mouseout', (opt) => {
+    this.groupF.on( 'mouseout', (opt) => {
       //console.log( 'MOut' );
       this.labelF.set( {'textBackgroundColor': this.labelF.copyTextBackgroundColor} );
       canvas.requestRenderAll();
     });
-
-    _allSelectableF.push( this.labelF );
+    _allSelectableF.push( this.groupF );
+    canvas.add( this.groupF );
+    
     personM.viewF = this;
     // TODO check this is legit ?
-    
-    canvas.add( this.labelF );
   }
   edit( personM ) {
     this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
   }
   remove() {
-    removeFromAllSelectable( this.labelF );
+    //removeFromAllSelectable( this.labelF );
     
-    canvas.remove( this.labelF );
+    //canvas.remove( this.labelF );
   }
   toArchive() {
     var archive = {
-      pos: {x: this.labelF.left, y: this.labelF.top}
+      pos: {x: this.groupF.left, y: this.groupF.top}
     };
     return archive;
   }

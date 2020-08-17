@@ -13,7 +13,7 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* _CURRENT_ : style for Person
+* _CURRENT_ : color for Faction
 * TODO [5/7] Fabric.js
 ** TODO Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
@@ -30,13 +30,15 @@ disable rightclick when already popping out
 *** create
 *** DONE (search)
 ** DONE Creation context menu : Faction, Person
-** [2/3] Person
+** [3/6] Person
 *** DONE creation menu : name, list Faction
 *** DONE save/load
-*** edit
-*** delete
+*** DONE group in Fabric
+*** TODO edit
+*** TODO delete
 *** TODO creation (choix faction) as circle+name
-** [5/5] Faction
+** [5/6] Faction
+*** TODO Color
 *** DONE lister
 *** DONE save
 *** DONE load
