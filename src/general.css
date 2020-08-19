@@ -1,0 +1,120 @@
+/* Make sure all elements have padding and border included in their size */
+* {
+    box-sizing: border-box;
+}
+
+/* class border */
+.border {
+    border: 1px solid lightgray;
+}
+
+#cy_canvas {
+    width: 100%;
+    height: 800px;
+}
+
+.select_container {
+    display: inline-block;
+}
+.input_container {
+    border-color: rgb(204, 204, 204);
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+}
+.input_container input {
+    border: 0px none;
+    margin: 2px 2px 2px 2px;
+}
+.icon_container {
+    display: inline-block;
+    flex: 0 0 auto;
+}
+.icon_separator {
+    display: inline-block;;
+    width: 2px;
+    background-color: black;
+    height: 12px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.vertical {
+    width: 1px;
+    height: 100%;
+}
+.deleter:hover {
+    background-color: rgb(255, 189, 173);
+    color: rgb(222, 53, 11);
+}
+.deleter svg {
+    stroke: currentcolor;
+    fill: currentcolor;
+}
+
+.all_choice {
+    display: block;
+}
+/* on a line, label SPACE icon */
+.choice_container {
+    display: flex;
+    justify-content: space-between;
+    background-color: rgb(230, 230, 230);
+    border-radius: 2px;
+    margin: 2px 2px 2px 2px;
+}
+.choice_container:hover {
+    color: rgb(222, 53, 11);
+}
+.choice_label {
+    flex-grow: 1;
+    margin: 2px 2px 2px 5px;
+}
+
+
+.popup {
+    position: absolute;
+    /*display: block;      /* hidden by default */
+    /*display: none;*/
+    background-color: lightblue;
+    box-sizing : border-box;
+    z-index: 2; 
+}
+.hidden {
+    display: none;
+}
+.invisible {
+    visibility: hidden;
+}
+
+/* vertical menu */
+.vertical_menu span {
+    display: block; /* Make the links appear below each other */
+    padding: 5px; /* Add some padding */
+}
+.vertical_menu span:hover {
+    background-color: #ccc; /* Dark grey background on mouse-over */
+}
+
+/* dropdown */
+.dropdown {
+    min-width: 220px;
+    border: 1px solid #bbb;
+    background-color: #ffffff;
+    padding: 7px 0;
+    margin: 4px 0 0 0;
+}
+.dropdown li {
+    display: block;
+    padding: 4px 14px 4px 14px;
+    text-decoration: none;
+    color: #5778d8; 
+    /*background: transparent;*/
+}
+.dropdown li:hover {
+    color:  #5778d8;
+    background-color: lavender;
+}
+.dropdown li[patt-selected="true"] {
+    color:  #ffffff;
+    background-color: #5778d8;
+}
