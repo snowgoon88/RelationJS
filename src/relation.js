@@ -1,5 +1,207 @@
 import './general.css';
 
+import ReactDOM from "react-dom";
 
-var infoHeadE = document.getElementById( 'info_head' );
-infoHeadE.innerHTML = "v 0.1.0";
+import {FactionM,
+        makeNewFactionM,
+        makeNewFactionIdM } from './models/factionM';
+import {fabric} from 'fabric';
+import {Vec,
+        intersectRectVec,
+        segmentPointVec,
+        computeBezierPointVec} from './utils/vec';
+import {allSetSelectable,addToAllSelectable,removeFromAllSelectable,
+        allowPopup,setPopable} from './utils/select_pop';
+
+import {addFactionF,  movedFactionF,
+        editFactionF} from './views/factionF';
+
+import {createContextMenuC} from './components/menuC.jsx';
+import {createFactionC} from './components/factionC.jsx';
+
+// *****************************************************************************
+// ********************************************************************** Canvas
+var canvas = new fabric.Canvas( 'fabric_canvas', {
+  width: 600,
+  height: 600,
+  fireRightClick: true,
+  fireMiddleClick: true,
+  stopContextMenu: true,
+});
+// **************************************************************** END - Canvas
+
+// var f0 = makeNewFactionM( "Bob's Lovers" );
+// console.log( "F0 GRAOU", f0 );
+// var infoHeadE = document.getElementById( 'info_head' );
+// infoHeadE.innerHTML = "again new " + f0.strDisplay();
+// console.log( "F0 AGAIN", f0.strDisplay() );
+
+// *****************************************************************************
+// ***************************************************************** ListFaction
+var _listFactionM = [];
+function newFactionAction( name, posV ) {
+  var newM = makeNewFactionM( name );
+  var newF = addFactionF( canvas, newM, posV, [0,0,255] );
+  _listFactionM.push( newM );
+}
+function addFactionActionA( factionA ) {
+  console.log( "addFactionAction", factionA );
+  if (factionA.id < 0) {
+    alert( "Cannot addFaction with improper id ("+factionA.id+")" );
+    return;
+  }
+  if (_listFactionM[factionA.id]) {
+    alert( "Cannot addFaction over existing one (id="+factionA.id+")" );
+    return;
+  }
+
+  let newM = makeNewFactionIdM( factionA.id, factionA.name );
+  let posV = factionA.viewInfo.pos;
+  var newF = addFactionF( canvas, newM, posV, [0,0,255] );
+  _listFactionM.push( newM );
+}
+function editFactionActionM( factionM ) {
+  let view = _listFactionM[factionM.id].viewF;
+  editFactionF( view, factionM );
+  _listFactionM[factionM.id] = factionM;
+  canvas.renderAll();
+}
+// used as menu callback,  so (posV, idx)
+function delFactionActionL( dummyV, factionIDX ) {
+  console.log( "__delFaction", factionIDX );
+  
+  if (_listFactionM[factionIDX]) {
+    let factionM = _listFactionM[factionIDX];
+    if (factionM != null ) {
+      // Remove all Relation to this faction
+      _listRelationM.forEach( (item, index) => {
+        if (item != null) {
+          if (item.isRelated( factionM )) {
+            delRelationActionL( item.id );
+          }
+        }
+      });
+      
+      let itemF = _listFactionM[factionIDX].viewF;
+      removeFromAllSelectable( itemF );
+      canvas.remove( itemF );
+      _listFactionM[factionIDX] = null;
+    }
+  }
+  else {
+    alert( "Cannot delFaction on non-existing faction" );
+  }
+}
+function findFactionMwithName( name ) {
+  return _listFactionM.find( (item,idx) => item.name == name );
+}
+// *********************************************************** END - ListFaction
+
+
+// ********************************************************************* Actions
+// *****************************************************************************
+function askNewFactionM( posV, dummyObj ) {
+  console.log( "askNewFactionM ", posV, dummyObj );
+  const gotNameCbk = (name) => {
+    newFactionAction( name, posV );
+    removeContextElementC();
+  }
+  const cancelCbk = removeContextElementC;
+
+  let factionC = createFactionC( -1, 'faction_name', gotNameCbk, cancelCbk );
+  showContextElementC( posV, factionC );
+}
+// **************************************************************** END - Action
+
+
+// *****************************************************************************
+// **************************************************************** Context Menu
+const handleDummy = ( obj, pos ) => {
+  console.log( "DUMMY", obj, pos );
+}
+var _createContextMenu = [
+  {label:"New Faction", cbk: askNewFactionM}, //( x, y, okCbk, cancelCbk )},
+  {label:"New Person", cbk: handleDummy}, //askNewPersonM}   // ??
+];
+
+var contextMenuE = document.getElementById( 'context_menu' );
+// to prevent 'context menu for showing off
+contextMenuE.addEventListener( 'contextmenu', function(event) {
+  //console.log( "contextMenu contextmenu", event.buttons );
+  event.preventDefault();
+  event.stopPropagation();
+},
+                               true /* capture */
+                             );
+
+function displayContextMenu( flag ) {
+  if (flag) {
+    contextMenuE.style.display = "block";
+    allSetSelectable( false );
+  }
+  else {
+    contextMenuE.style.display = "none";
+    allSetSelectable( true );
+  }
+  canvas.requestRenderAll();
+}
+var _contextPopupE;
+function showContextElementC( posV, elemC ) {
+  console.log( "showContextElementE", posV, elemC );
+  setPopable( false );
+  _contextPopupE = document.createElement( "DIV" );
+  contextMenuE.appendChild( _contextPopupE );
+
+  contextMenuE.style.left = posV.x + 'px';
+  contextMenuE.style.top = posV.y + 'px';
+
+  ReactDOM.render( elemC, _contextPopupE );
+  displayContextMenu( true );
+}
+
+function removeContextElementC() {
+  console.log( "removeContextElementE");
+  _contextPopupE.remove();
+  displayContextMenu( false );
+  setPopable( true );
+}
+// ************************************************************ END Context Menu
+
+// *****************************************************************************
+// ************************************************************* Fabric Callback
+// *****************************************************************************
+canvas.on( 'mouse:down', function (opt) {
+  console.log( 'canvas.mouse:down', opt, ); //_allowPopup );
+
+   // RightClick
+  if (opt.e.button === 2) {
+    // on the background of canvas
+    if (opt.target === null) {
+      // if already popping then abort also
+      if ( !allowPopup() ) {
+        removeContextElementC();
+      }
+      else {
+        //use mouseEvent to know absolute position
+        let posV = new Vec(opt.e.x, opt.e.y);
+        let creationMenuC = createContextMenuC( posV,
+                                                null, // elemIDX
+                                                "Creation Menu",
+                                                _createContextMenu, // items
+                                                removeContextElementC );
+                                              
+        showContextElementC( posV, creationMenuC );
+      }
+    }
+    else {
+      console.log( "RClick on ", opt.target );
+      alert( "RClick on what ?" );
+    }
+  }
+  
+  // Middle click
+  if (opt.e.button === 1) {
+    alert( "X="+opt.e.x+", Y="+opt.e.y );
+  }
+});
+// ******************************************************* End - Fabric Callback
