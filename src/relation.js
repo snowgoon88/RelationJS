@@ -20,6 +20,30 @@ import {createContextMenuC} from './components/menuC.jsx';
 import {createFactionC} from './components/factionC.jsx';
 
 // *****************************************************************************
+// ****************************************************************** body Event
+// debug Event at body level -> look at target
+var bodyElement = document.getElementsByTagName("BODY")[0];
+/* bodyElement.addEventListener( 'contextmenu', function (event) {
+ *   console.log( "BODY context", event );
+ * }); */
+// ESC : keydown (repeated) keyup
+/* bodyElement.addEventListener( 'keydown', function (event) {
+ *   console.log( "BODY keydown", event );
+ * });
+ * bodyElement.addEventListener( 'keypress', function (event) {
+ *   console.log( "BODY keypress", event );
+ * }); */
+bodyElement.addEventListener( 'keyup', function (event) {
+  //console.log( "BODY keyup", event );
+  if (event.key === "Escape" ) {
+    //console.log( "  ESC" );
+    removeContextElementC();
+    //TODO abortDrawArrow();
+  }
+});
+// ************************************************************ END - body Event
+
+// *****************************************************************************
 // ********************************************************************** Canvas
 var canvas = new fabric.Canvas( 'fabric_canvas', {
   width: 600,
@@ -42,7 +66,7 @@ var _listFactionM = [];
 function newFactionAction( fields, posV ) {
   console.log( "newFactionAction fields=",fields );
   var newM = makeNewFactionM( fields );
-  var newF = addFactionF( canvas, newM, posV, [0,0,255] );
+  var newF = addFactionF( canvas, newM, posV );
   _listFactionM.push( newM );
 }
 function addFactionActionA( factionA ) {
@@ -61,8 +85,10 @@ function addFactionActionA( factionA ) {
   var newF = addFactionF( canvas, newM, posV, [0,0,255] );
   _listFactionM.push( newM );
 }
-function editFactionActionM( factionM ) {
-  let view = _listFactionM[factionM.id].viewF;
+function editFactionActionL( id, fields ) {
+  let factionM = _listFactionM[id];
+  factionM.edit( fields );
+  let view = factionM.viewF;
   editFactionF( view, factionM );
   _listFactionM[factionM.id] = factionM;
   canvas.renderAll();
@@ -111,9 +137,31 @@ function askNewFactionM( posV, dummyObj ) {
   }
   const cancelCbk = removeContextElementC;
 
-  let factionC = createFactionC( -1, 'faction_name', gotFieldsCbk, cancelCbk );
+  let factionC = createFactionC( { id:-1,
+                                   name:'faction_name',
+                                   color:{ r: 13, g: 71, b: 161, a: 1 }},
+                                 gotFieldsCbk,
+                                 cancelCbk );
+  
   showContextElementC( posV, factionC );
 }
+function askEditFactionL( posV, factionIDX ) {
+  console.log( "askEditFactionL factionIDX=", factionIDX );
+  let factionM = _listFactionM[factionIDX];
+  const gotFieldsCbk = ( fields ) => {
+    editFactionActionL( factionM.id, fields );
+    removeContextElementC();
+  }
+  const cancelCbk = () => {
+    removeContextElementC();
+  }
+
+  let factionC = createFactionC( factionM,
+                                 gotFieldsCbk,
+                                 cancelCbk );
+  showContextElementC( posV, factionC );
+}
+
 function archiveJSONAction() {
   // make new array with data to archive
   let archiveFaction = [];
@@ -157,6 +205,13 @@ var _createContextMenu = [
   {label:"New Faction", cbk: askNewFactionM}, //( x, y, okCbk, cancelCbk )},
   {label:"New Person", cbk: handleDummy}, //askNewPersonM}   // ??
 ];
+var _factionContextMenu = [
+  {label:"Edit", cbk:askEditFactionL},
+  {label:"New Relation", cbk: handleDummy}, //startRelationFromFactionL},
+  {label:"<hr>",cbk:null}, // separator
+  {label: "Delete", cbk: handleDummy}, //delFactionActionL} // TODO ask ?
+];
+
 
 var contextMenuE = document.getElementById( 'context_menu' );
 // to prevent 'context menu for showing off
@@ -228,8 +283,30 @@ canvas.on( 'mouse:down', function (opt) {
       }
     }
     else {
-      console.log( "RClick on ", opt.target );
-      alert( "RClick on what ?" );
+      // a Faction
+      if (opt.target.elemType === "Faction") {
+        // while drawingArrow
+        // if (isDrawArrow()) {
+        //   console.log( "ED 2 display target" );
+        //   endDrawArrow( opt.e.x, opt.e.y, opt.target );
+        //   return
+        // }
+        // console.log( "RC: ",opt );
+        // console.log( "  F:",_listFaction[opt.target.id] );
+        if( allowPopup() ) {
+          let posV = new Vec(opt.e.x, opt.e.y);
+          let factionMenuC = createContextMenuC( posV,
+                                                 opt.target.id, // elemIDX
+                                                 "Faction Menu",
+                                                 _factionContextMenu, // items
+                                                 removeContextElementC );
+          showContextElementC( posV, factionMenuC );
+        }
+      }
+      else {
+        console.log( "RClick on ", opt.target );
+        alert( "RClick on what ?" );
+      }
     }
   }
   

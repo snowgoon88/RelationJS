@@ -46,12 +46,12 @@ const NameFactionC = (props) => {
     </div>
   );
 }
-export function createFactionC( id, name, okCbk, cancelCbk ) {
+export function createFactionC( fieldsFactionM, okCbk, cancelCbk ) {
   return (
     <NameFactionC
-      id={id}
-      name={name}
-      color={{ r: 13, g: 71, b: 161, a: 1 }}
+      id={fieldsFactionM.id}
+      name={fieldsFactionM.name}
+      color={fieldsFactionM.color}
       okCbk={okCbk}
       cancelCbk={cancelCbk}
     />

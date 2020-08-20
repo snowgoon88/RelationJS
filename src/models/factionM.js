@@ -43,6 +43,17 @@ export class FactionM {
 
     return archive;
   }
+  edit( fields ) {
+    // TODO could check validity
+    for( const [key, value] of Object.entries( fields )) {
+      if( key.localeCompare( 'name' ) == 0 ) {
+        this.name = value;
+      }
+      if( key.localeCompare( 'color' ) == 0 ) {
+        this.color = value;
+      }
+    }
+  }
 }
 // ***** to Manage Faction.id
 var _idmax_faction = 0;

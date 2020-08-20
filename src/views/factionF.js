@@ -11,8 +11,9 @@ import {addFactionF, movedFactionF, editFactionF} from 'path/factionF';
 // require: fabric.js, canvas
 // IText has NO border (the border is only when selected)
 var _colHiglightRGBA = "rgba( 255, 0, 0, 0.2)";
-export function addFactionF( canvas, factionM, posV, colorRGB ) {
-  let colRGBA = 'rgba( '+colorRGB[0]+', '+colorRGB[1]+', '+colorRGB[2]+', 0.2)';
+export function addFactionF( canvas, factionM, posV ) {
+  let colorRGB = factionM.color;
+  let colRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 0.2)';
   var labelF = new fabric.IText( 'F'+factionM.id+': '+factionM.name, {
     id: factionM.id,
     // model is needed in movedFactionF, to find Relations
@@ -72,6 +73,13 @@ export function movedFactionF( itemF ) {
   allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
 }
 export function editFactionF( labelF, factionM ) {
-  labelF.set( {'text' : 'F'+factionM.id+': '+factionM.name } );
+  let colorRGB = factionM.color;
+  let colRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 0.2)';
+
+  labelF.set( {
+    'text' : 'F'+factionM.id+': '+factionM.name,
+    'textBackgroundColor' : colRGBA,
+    'copyTextBackgroundColor' : colRGBA,
+              } );
 }
 // ************************************************************** END - FactionF

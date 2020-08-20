@@ -2,8 +2,11 @@ import React, { Component } from "react";
 
 // *****************************************************************************
 // *********************************************************************** MenuC
-// PROPS: items = [ {label, cbk] OR {label:"<hr>", cbk:null} for sep ]
-//        undisplayCbk
+// PROPS: - elemIDX
+//        - posV
+//        - msg
+//        - items = [ {label, cbk] OR {label:"<hr>", cbk:null} for sep ]
+//        - undisplayCbk
 export function MenuC(props) {
 
   // build menu Items
@@ -17,7 +20,7 @@ export function MenuC(props) {
         onClick={() =>  {
           //removeContextElementC();
           props.undisplayCbk();
-          item.cbk( props.pos, null )
+          item.cbk( props.pos, props.elemIDX )
         }}
       >
         {item.label}
