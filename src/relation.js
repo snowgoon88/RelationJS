@@ -2,7 +2,7 @@ import './general.css';
 
 import ReactDOM from "react-dom";
 
-import {FactionM,
+import {getIdMaxFaction,
         makeNewFactionM,
         makeNewFactionIdM } from './models/factionM';
 import {fabric} from 'fabric';
@@ -39,8 +39,9 @@ var canvas = new fabric.Canvas( 'fabric_canvas', {
 // *****************************************************************************
 // ***************************************************************** ListFaction
 var _listFactionM = [];
-function newFactionAction( name, posV ) {
-  var newM = makeNewFactionM( name );
+function newFactionAction( fields, posV ) {
+  console.log( "newFactionAction fields=",fields );
+  var newM = makeNewFactionM( fields );
   var newF = addFactionF( canvas, newM, posV, [0,0,255] );
   _listFactionM.push( newM );
 }
@@ -55,7 +56,7 @@ function addFactionActionA( factionA ) {
     return;
   }
 
-  let newM = makeNewFactionIdM( factionA.id, factionA.name );
+  let newM = makeNewFactionIdM( factionA.id, {name: factionA.name} );
   let posV = factionA.viewInfo.pos;
   var newF = addFactionF( canvas, newM, posV, [0,0,255] );
   _listFactionM.push( newM );
@@ -97,19 +98,52 @@ function findFactionMwithName( name ) {
 }
 // *********************************************************** END - ListFaction
 
+var _listPersonM = [];
+var _listRelationM = [];
 
-// ********************************************************************* Actions
 // *****************************************************************************
+// ********************************************************************* Actions
 function askNewFactionM( posV, dummyObj ) {
   console.log( "askNewFactionM ", posV, dummyObj );
-  const gotNameCbk = (name) => {
-    newFactionAction( name, posV );
+  const gotFieldsCbk = ( fields ) => {
+    newFactionAction( fields, posV );
     removeContextElementC();
   }
   const cancelCbk = removeContextElementC;
 
-  let factionC = createFactionC( -1, 'faction_name', gotNameCbk, cancelCbk );
+  let factionC = createFactionC( -1, 'faction_name', gotFieldsCbk, cancelCbk );
   showContextElementC( posV, factionC );
+}
+function archiveJSONAction() {
+  // make new array with data to archive
+  let archiveFaction = [];
+  _listFactionM.forEach( (item, index) => {
+    if (item) {
+      archiveFaction.push( {factionA: item.toArchive()} );
+    }
+  });
+  let archivePerson = [];
+  _listPersonM.forEach( (item, index) => {
+    if (item) {
+      archivePerson.push( {personA: item.toArchive()} );
+    }
+  });
+  let archiveRelation = [];
+  _listRelationM.forEach( (item, index) => {
+    if (item) {
+      archiveRelation.push( {relationA: item.toArchive()} );
+    }
+  });
+
+  let archive = {
+    factions: archiveFaction,
+    persons: archivePerson,
+    relations: archiveRelation
+  };
+  let doc = JSON.stringify( archive );
+  console.log( "__showAllAction in JSON" );
+  console.log( doc );
+  return doc;
 }
 // **************************************************************** END - Action
 
@@ -205,3 +239,19 @@ canvas.on( 'mouse:down', function (opt) {
   }
 });
 // ******************************************************* End - Fabric Callback
+
+// *****************************************************************************
+// ********************************************************************* Buttons
+var btnInfoE = document.getElementById( "btn_info" );
+btnInfoE.addEventListener( 'click', () => {
+  console.log( "_listFactionM size=",_listFactionM.length, getIdMaxFaction() );
+  archiveJSONAction();
+});
+function btnSave() {
+  saveAllJSONAction();
+}
+function btnLoad(event) {
+  console.log( "__Load e=",event );
+  readAllFromFileAction( event.target.files[0] );
+}
+// ***************************************************************** END Buttons

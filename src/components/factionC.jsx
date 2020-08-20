@@ -1,14 +1,19 @@
 import React, { Component } from "react";
-import {TextCellC} from './textCellC.jsx';
+import {TextCellC, ColorCellC} from './cellC.jsx';
 
+/*
+import {createFactionC} from 'path/factionC.jsx';
+*/
 // *****************************************************************************
 // ******************************************************************** FactionC
 // PROPS: id, name, okCbk, cancelCbk
 const NameFactionC = (props) => {
   const [name, setName] = React.useState( props.name );
-
+  const [color, setColor] = React.useState( props.color );
+  
   const handleBtnOK = () => {
-    props.okCbk( name );
+    console.log( "NameFactionC ", name, color );
+    props.okCbk( {name:name, color:color} );
   }
   const handleBtnCancel = () => {
     props.cancelCbk();
@@ -29,6 +34,11 @@ const NameFactionC = (props) => {
               onValueChange={setName}
               value={name}
             />
+            <ColorCellC
+              title="Color"
+              color={color}
+              onColorCompleteCbk={setColor}
+            />
           </tbody>
         </table>
       </fieldset>
@@ -41,6 +51,7 @@ export function createFactionC( id, name, okCbk, cancelCbk ) {
     <NameFactionC
       id={id}
       name={name}
+      color={{ r: 13, g: 71, b: 161, a: 1 }}
       okCbk={okCbk}
       cancelCbk={cancelCbk}
     />

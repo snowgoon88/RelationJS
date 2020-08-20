@@ -6,7 +6,7 @@
 const { sh, cli, help } = require('tasksfile')
 
 function gtags( options ) {
-    sh( 'find src -type f -print > gtags.files && gtags' )
+    sh( 'find src -type f -name "*.j*[^~]" -print > gtags.files && gtags' )
 }
 help( gtags, 'Regenerate GTAGS')
 
