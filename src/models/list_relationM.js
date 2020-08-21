@@ -1,6 +1,7 @@
 /*
 import {getListRelationM, getRelationL, findRelationMWith,
-        addToRelationM, delFromRelationL } from 'path/list_relation';
+        addToRelationM, setListRelationL, delFromRelationL }
+from 'path/list_relation';
 */
 // *****************************************************************************
 // *************************************************************** ListRelationM
@@ -31,6 +32,18 @@ export function addToRelationM( relationM ) {
     return;
   }
   _listRelationM.push( relationM );
+}
+export function setListRelationL( id, relationM ) {
+  // check Id
+  if( id != relationM.id ) {
+    alert( "Cannot setListRelationL with mismatch id ("+id+", "+relationM.id+")" );
+    return;
+  }
+  if( getRelationL( id ) == null ) {
+    alert( "Cannot setListRelationL over null id ("+id+")" );
+    return;
+  }
+  _listRelationM[id] = relationM;
 }
 export function delFromRelationL( relationIDX ) {
   console.log( "__delRelation", relationIDX );

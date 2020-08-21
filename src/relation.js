@@ -16,8 +16,8 @@ import {addFactionF,
 import {makeNewRelationM, makeNewRelationIdM} from './models/relationM';
 import {RelationF} from './views/relationF';
 
-import {getListRelationM, findRelationMWith,
-        addToRelationM } from './models/list_relationM';
+import {getListRelationM, findRelationMWith, getRelationL,
+        addToRelationM, setListRelationL } from './models/list_relationM';
 
 import {createContextMenuC} from './components/menuC.jsx';
 import {createFactionC} from './components/factionC.jsx';
@@ -171,14 +171,14 @@ function newRelationAction( name, srcM, destM ) {
 //   _listRelationM.push( nrM );
 // }
 
-// TODO function editRelationActionM( relationM ) {
-//   let view = relationM.viewF;
-//   view.edit( relationM );
-//   _listRelationM[relationM.id] = relationM;
-//   canvas.renderAll();
-// }
-
-
+function editRelationActionL( id, fields ) {
+  let relationM = getRelationL( id );
+  relationM.edit( fields );
+  let view = relationM.viewF;
+  view.edit( relationM );
+  setListRelationL( id, relationM );
+  canvas.renderAll();
+}
 
 // *****************************************************************************
 // ********************************************************************* Actions
@@ -232,6 +232,20 @@ function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
                                    cancelFieldsCbk );
   showContextElementC( posV, relationC );
 }
+function askEditRelationL( posV, relationIDX ) {
+  let relationM = getRelationL( relationIDX );
+  const gotFieldsCbk = ( fields ) => {
+    editRelationActionL( relationM.id, fields );
+    removeContextElementC();
+  }
+  const cancelFieldsCbk = () => {
+    removeContextElementC();
+  }
+  let relationC = createRelationC( relationM,
+                                   gotFieldsCbk,
+                                   cancelFieldsCbk );
+  showContextElementC( posV, relationC );
+}
 
 function archiveJSONAction() {
   // make new array with data to archive
@@ -272,25 +286,7 @@ function startRelationFromFactionL( posV, factionIDX ) {
   let factionF = _listFactionM[factionIDX].viewF;
   startDrawArrow( factionF, posV );
 }
-function askEditRelationL( posV, relationIDX ) {
-  let relationM = _listRelationM[relationIDX];
-  const editName = (name) => {
-    relationM.name = name;
-    editRelationActionM( relationM );
-    removeContextElementC();
-  }
-  const cancelName = () => {
-    removeContextElementC();
-  }
-  showContextElementC( posV,
-                       <NameRelationC
-    id={relationM.idx}
-    name={relationM.name}
-    okCbk={editName}
-    cancelCbk={cancelName}
-    />
-  );
-}
+
 // **************************************************************** END - Action
 
 // *****************************************************************************
@@ -368,12 +364,16 @@ var _createContextMenu = [
   {label:"New Person", cbk: handleDummy}, //askNewPersonM}   // ??
 ];
 var _factionContextMenu = [
-  {label:"Edit", cbk:askEditFactionL},
+  {label:"Edit", cbk: askEditFactionL},
   {label:"New Relation", cbk: startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
   {label: "Delete", cbk: handleDummy}, //delFactionActionL} // TODO ask ?
 ];
-
+var _relationContextMenu = [
+  {label:"Edit", cbk: askEditRelationL},
+  {label:"<hr>",cbk:null}, // separator
+  {label: "Delete", cbk: handleDummy}, //askDelRelationL}
+]
 
 var contextMenuE = document.getElementById( 'context_menu' );
 // to prevent 'context menu for showing off
@@ -488,6 +488,24 @@ canvas.on( 'mouse:down', function (opt) {
                                                  _factionContextMenu, // items
                                                  removeContextElementC );
           showContextElementC( posV, factionMenuC );
+        }
+      }
+      else if( opt.target.elemType === "Relation" ) {
+        // while drawingArrow
+        if( isDrawArrow() ) {
+          abortDrawArrow();
+          return
+        }
+
+        // ContextMenu for Relation
+        if( allowPopup() ) {
+          let posV = new Vec(opt.e.x, opt.e.y);
+          let relationMenuC = createContextMenuC( posV,
+                                                  opt.target.id, // elemIDX
+                                                  "Relation Menu",
+                                                  _relationContextMenu, // items
+                                                  removeContextElementC );
+          showContextElementC( posV, relationMenuC );
         }
       }
       else {
