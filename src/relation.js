@@ -1,6 +1,7 @@
 import './general.css';
 
 import ReactDOM from "react-dom";
+import { saveAs } from 'file-saver';
 
 import {fabric} from 'fabric';
 import {Vec} from './utils/vec';
@@ -83,9 +84,9 @@ function addFactionActionA( factionA ) {
     return;
   }
 
-  let newM = makeNewFactionIdM( factionA.id, {name: factionA.name} );
+  let newM = makeNewFactionIdM( factionA.id, factionA );
   let posV = factionA.viewInfo.pos;
-  var newF = addFactionF( canvas, newM, posV, [0,0,255] );
+  var newF = addFactionF( canvas, newM, posV );
   _listFactionM.push( newM );
 }
 function editFactionActionL( id, fields ) {
@@ -149,27 +150,29 @@ function newRelationAction( name, srcM, destM ) {
 }
 
 
-// TODO function addRelationActionA( relationA ) {
-//   console.log( "addRelationActionA", relationA );
-//   if (relationA.id < 0) {
-//     alert( "Cannot addRelation with improper id ("+relationA.id+")" );
-//     return;
-//   }
-//   if (_listRelationM[relationA.id]) {
-//     alert( "Cannot addRerlation over existing one (id="+relationA.id+")" );
-//     return;
-//   }
-//   let srcFactionM = _listFactionM[relationA.srcId];
-//   let destFactionM = _listFactionM[relationA.destId];
+function addRelationActionA( relationA ) {
+  console.log( "addRelationActionA", relationA );
+  // if (relationA.id < 0) {
+  //   alert( "Cannot addRelation with improper id ("+relationA.id+")" );
+  //   return;
+  // }
+  // if (_listRelationM[relationA.id]) {
+  //   alert( "Cannot addRerlation over existing one (id="+relationA.id+")" );
+  //   return;
+  // }
+  let srcFactionM = _listFactionM[relationA.srcId];
+  let destFactionM = _listFactionM[relationA.destId];
 
-//   var nrM = makeNewRelationIdM( relationA.id, relationA.name,
-//                                 srcFactionM, destFactionM );
-//   var nrF = new RelationF( nrM, 'red' );
-//   nrM.viewF = nrF;
-//   nrF.setCtrlPt( relationA.viewInfo.posCtrl );
-//   nrF.setInactive(); 
-//   _listRelationM.push( nrM );
-// }
+  var nrM = makeNewRelationIdM( relationA.id,
+                                {name: relationA.name,
+                                 srcFactionM: srcFactionM,
+                                 destFactionM: destFactionM} );
+  var nrF = new RelationF( canvas, nrM, 'red' );
+  nrM.viewF = nrF;
+  nrF.setCtrlPt( relationA.viewInfo.posCtrl );
+  nrF.setInactive();
+  addToRelationM( nrM );
+}
 
 function editRelationActionL( id, fields ) {
   let relationM = getRelationL( id );
@@ -277,6 +280,77 @@ function archiveJSONAction() {
   console.log( "__showAllAction in JSON" );
   console.log( doc );
   return doc;
+}
+function saveAllJSONAction() {
+  let doc = archiveJSONAction();
+  let jsonBlob = new Blob([doc],
+                          { type: 'application/javascript;charset=utf-8' });
+  saveAs( jsonBlob, "faction_data.json" );
+}
+function populateAllFromJSONAction( doc ) {
+  let archive = JSON.parse( doc );
+
+  let archiveFaction = archive.factions;
+  if( archiveFaction ) {
+    archiveFaction.forEach( (item, index) => {
+      console.log( "["+index+"]=",item );
+      if (item.factionA.viewInfo) {
+        console.log( "populate with", item.factionA );
+        addFactionActionA( item.factionA );//DEL, item.factionA.viewInfo.pos );
+        console.log( "_listFactionM size=",_listFactionM.length, getIdMaxFaction() );
+      }
+      else {
+        alert( "Populate Faction from factionA without viewInfo" );
+        return;
+      }
+    });
+}
+  let archivePerson = archive.persons;
+  if( archivePerson ) {
+    archivePerson.forEach( (item, index) => {
+      console.log( "["+index+"]=",item );
+      if (item.personA.viewInfo) {
+        addPersonActionA( item.personA );
+      }
+      else {
+        alert( "Populate Faction from factionA without viewInfo" );
+        return;
+      }
+    });
+  }
+  
+  let archiveRelation = archive.relations;
+  archiveRelation.forEach( (item, index) => {
+    console.log( "["+index+"]=",item );
+    if (item.relationA.viewInfo) {
+      addRelationActionA( item.relationA );
+    }
+    else {
+      alert( "Populate Faction from factionA without viewInfo" );
+      return;
+    }
+  });
+}
+function readAllFromFileAction( file ) {
+  // Check right type (application/json)
+  if (file.type && file.type.indexOf( 'application/json' ) === -1) {
+    alert( "File "+file.name+" is not JSON file" );
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener( 'load', (event) => {
+    console.log( "__READ loaded" );
+    console.log( reader.result );
+    populateAllFromJSONAction( reader.result );
+  });
+  reader.addEventListener('progress', (event) => {
+    if (event.loaded && event.total) {
+      const percent = (event.loaded / event.total) * 100;
+      console.log(`__READ Progress: ${Math.round(percent)}`);
+    }
+  });
+  reader.readAsText(file); // when finished, will throw 'load'
 }
 
 // used as a Menu Callback, so (posV, obj )
@@ -562,11 +636,15 @@ btnInfoE.addEventListener( 'click', () => {
   console.log( "_listFactionM size=",_listFactionM.length, getIdMaxFaction() );
   archiveJSONAction();
 });
-function btnSave() {
+
+var btnSave = document.getElementById( "btn_save" );
+btnSave.addEventListener( 'click', () => {
   saveAllJSONAction();
-}
-function btnLoad(event) {
+});
+
+var inputLoad = document.getElementById( "file-selector" ); 
+inputLoad.addEventListener( 'change', () => {
   console.log( "__Load e=",event );
   readAllFromFileAction( event.target.files[0] );
-}
+});
 // ***************************************************************** END Buttons

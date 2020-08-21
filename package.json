@@ -21,6 +21,7 @@
   "homepage": "https://github.com/snowgoon88/RelationJS#readme",
   "dependencies": {
     "fabric": "^3.6.3",
+    "file-saver": "^2.0.2",
     "react": "^16.13.1",
     "react-color": "^2.18.1",
     "react-dom": "^16.13.1"
