@@ -6,7 +6,7 @@ import {createFactionC} from 'path/factionC.jsx';
 */
 // *****************************************************************************
 // ******************************************************************** FactionC
-// PROPS: id, name, okCbk, cancelCbk
+// PROPS: id, name, color, okCbk, cancelCbk
 const NameFactionC = (props) => {
   const [name, setName] = React.useState( props.name );
   const [color, setColor] = React.useState( props.color );
@@ -57,4 +57,4 @@ export function createFactionC( fieldsFactionM, okCbk, cancelCbk ) {
     />
   );
 }
-// *************************************************************** END -FactionC
+// ************************************************************** END - FactionC

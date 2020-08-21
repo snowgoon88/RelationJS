@@ -2,23 +2,26 @@ import './general.css';
 
 import ReactDOM from "react-dom";
 
+import {fabric} from 'fabric';
+import {Vec} from './utils/vec';
+import {allSetSelectable,removeFromAllSelectable,
+        allowPopup,setPopable} from './utils/select_pop';
+
 import {getIdMaxFaction,
         makeNewFactionM,
         makeNewFactionIdM } from './models/factionM';
-import {fabric} from 'fabric';
-import {Vec,
-        intersectRectVec,
-        segmentPointVec,
-        computeBezierPointVec} from './utils/vec';
-import {allSetSelectable,addToAllSelectable,removeFromAllSelectable,
-        allowPopup,setPopable} from './utils/select_pop';
-
-import {addFactionF,  movedFactionF,
+import {addFactionF,
         editFactionF} from './views/factionF';
+
+import {makeNewRelationM, makeNewRelationIdM} from './models/relationM';
+import {RelationF} from './views/relationF';
+
+import {getListRelationM, findRelationMWith,
+        addToRelationM } from './models/list_relationM';
 
 import {createContextMenuC} from './components/menuC.jsx';
 import {createFactionC} from './components/factionC.jsx';
-
+import {createRelationC} from './components/relationC.jsx';
 // *****************************************************************************
 // ****************************************************************** body Event
 // debug Event at body level -> look at target
@@ -61,7 +64,7 @@ var canvas = new fabric.Canvas( 'fabric_canvas', {
 // console.log( "F0 AGAIN", f0.strDisplay() );
 
 // *****************************************************************************
-// ***************************************************************** ListFaction
+// **************************************************************** ListFactionM
 var _listFactionM = [];
 function newFactionAction( fields, posV ) {
   console.log( "newFactionAction fields=",fields );
@@ -101,7 +104,7 @@ function delFactionActionL( dummyV, factionIDX ) {
     let factionM = _listFactionM[factionIDX];
     if (factionM != null ) {
       // Remove all Relation to this faction
-      _listRelationM.forEach( (item, index) => {
+      getListRelationM().forEach( (item, index) => {
         if (item != null) {
           if (item.isRelated( factionM )) {
             delRelationActionL( item.id );
@@ -122,10 +125,60 @@ function delFactionActionL( dummyV, factionIDX ) {
 function findFactionMwithName( name ) {
   return _listFactionM.find( (item,idx) => item.name == name );
 }
-// *********************************************************** END - ListFaction
+// ********************************************************** END - ListFactionM
 
 var _listPersonM = [];
-var _listRelationM = [];
+
+
+
+function newRelationAction( name, srcM, destM ) {
+  // check different items
+  if (srcM === destM) {
+    alert( "No Relation with same Element" );
+    return;
+  }
+  var nrM = makeNewRelationM( {name:name, srcFactionM:srcM,
+                               destFactionM:destM} );
+  var nrF = new RelationF( canvas, nrM, 'red' );
+  nrM.viewF = nrF;
+  addToRelationM( nrM );
+
+  // deselect everything except new relation
+  canvas.discardActiveObject();
+  nrF.setActive();
+}
+
+
+// TODO function addRelationActionA( relationA ) {
+//   console.log( "addRelationActionA", relationA );
+//   if (relationA.id < 0) {
+//     alert( "Cannot addRelation with improper id ("+relationA.id+")" );
+//     return;
+//   }
+//   if (_listRelationM[relationA.id]) {
+//     alert( "Cannot addRerlation over existing one (id="+relationA.id+")" );
+//     return;
+//   }
+//   let srcFactionM = _listFactionM[relationA.srcId];
+//   let destFactionM = _listFactionM[relationA.destId];
+
+//   var nrM = makeNewRelationIdM( relationA.id, relationA.name,
+//                                 srcFactionM, destFactionM );
+//   var nrF = new RelationF( nrM, 'red' );
+//   nrM.viewF = nrF;
+//   nrF.setCtrlPt( relationA.viewInfo.posCtrl );
+//   nrF.setInactive(); 
+//   _listRelationM.push( nrM );
+// }
+
+// TODO function editRelationActionM( relationM ) {
+//   let view = relationM.viewF;
+//   view.edit( relationM );
+//   _listRelationM[relationM.id] = relationM;
+//   canvas.renderAll();
+// }
+
+
 
 // *****************************************************************************
 // ********************************************************************* Actions
@@ -162,6 +215,24 @@ function askEditFactionL( posV, factionIDX ) {
   showContextElementC( posV, factionC );
 }
 
+function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
+  console.log( "askNewRelationM ", posV, dummyObj );
+  // ask for a fields
+  const gotFieldsCbk = ( fields ) => {
+    removeContextElementC();
+    okCbk( fields );
+  }
+  const cancelFieldsCbk = () => {
+    removeContextElementC();
+    cancelCbk()
+  }
+
+  let relationC = createRelationC( {id:-1, name:"relation_name"},
+                                   gotFieldsCbk,
+                                   cancelFieldsCbk );
+  showContextElementC( posV, relationC );
+}
+
 function archiveJSONAction() {
   // make new array with data to archive
   let archiveFaction = [];
@@ -177,7 +248,7 @@ function archiveJSONAction() {
     }
   });
   let archiveRelation = [];
-  _listRelationM.forEach( (item, index) => {
+  getListRelationM().forEach( (item, index) => {
     if (item) {
       archiveRelation.push( {relationA: item.toArchive()} );
     }
@@ -193,7 +264,98 @@ function archiveJSONAction() {
   console.log( doc );
   return doc;
 }
+
+// used as a Menu Callback, so (posV, obj )
+function startRelationFromFactionL( posV, factionIDX ) {
+  console.log( 'startRelationFromFactionL', posV );
+  // need to find FactionF related to this factionM
+  let factionF = _listFactionM[factionIDX].viewF;
+  startDrawArrow( factionF, posV );
+}
+function askEditRelationL( posV, relationIDX ) {
+  let relationM = _listRelationM[relationIDX];
+  const editName = (name) => {
+    relationM.name = name;
+    editRelationActionM( relationM );
+    removeContextElementC();
+  }
+  const cancelName = () => {
+    removeContextElementC();
+  }
+  showContextElementC( posV,
+                       <NameRelationC
+    id={relationM.idx}
+    name={relationM.name}
+    okCbk={editName}
+    cancelCbk={cancelName}
+    />
+  );
+}
 // **************************************************************** END - Action
+
+// *****************************************************************************
+// ******************************************************************* DrawArrow
+// *****************************************************************************
+var _stateDA = "none"; // none | drawing
+var _srcFDA = null;
+var _lineDA;
+function startDrawArrow( srcF, mouseV ) {
+  _stateDA = "drawing";
+  _srcFDA = srcF;
+  // Create a new line from srcF.left/top to mouseP.x/y
+  _lineDA = new fabric.Line( [srcF.left, srcF.top, mouseV.x, mouseV.y ], {
+    stroke: 'red',
+    selectable: false,
+  });
+  canvas.add( _lineDA );
+  // cannot select anything
+  allSetSelectable( false );
+}
+function updateDrawArrow( mouseV ) {
+  // Update line to mouseP.x/y
+  _lineDA.set( {'x2': mouseV.x, 'y2': mouseV.y} );
+  //_lineDA.setCoords();
+  //_lineDA.set('dirty', true);
+  canvas.requestRenderAll();
+}
+function abortDrawArrow() {
+  console.log( "abortDA" );
+  _stateDA = "none";
+  _srcFDA = null;
+  canvas.remove( _lineDA );
+  allSetSelectable( true );
+}
+function endDrawArrow( x, y, itemF ) {
+  console.log( "endDA", itemF );
+  // check it is a Faction
+  if (itemF.model && itemF.model.type === "FactionM" ) {
+    _stateDA = "none";
+
+    // ask for a Relation fields
+    const gotFields = (fields) => {
+      console.log( "endARROW => newRelation", fields.name );
+      canvas.remove( _lineDA );
+      newRelationAction( fields.name, _srcFDA.model, itemF.model );
+
+      //DEL removeContextElementC();
+      allSetSelectable( true );
+    }
+    const cancelFields = () => {
+      console.log( "endARROW => abort" );
+
+      abortDrawArrow();
+      removeContextElementC();
+    }
+    askNewRelationM( new Vec(x, y), null, gotFields, cancelFields );
+  }
+  else {
+    return abortDrawArrow();
+  }
+}
+function isDrawArrow() {
+  return _stateDA === "drawing";
+}
+// *************************************************************** END DrawArrow
 
 
 // *****************************************************************************
@@ -207,7 +369,7 @@ var _createContextMenu = [
 ];
 var _factionContextMenu = [
   {label:"Edit", cbk:askEditFactionL},
-  {label:"New Relation", cbk: handleDummy}, //startRelationFromFactionL},
+  {label:"New Relation", cbk: startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
   {label: "Delete", cbk: handleDummy}, //delFactionActionL} // TODO ask ?
 ];
@@ -262,10 +424,35 @@ function removeContextElementC() {
 canvas.on( 'mouse:down', function (opt) {
   console.log( 'canvas.mouse:down', opt, ); //_allowPopup );
 
+  // Left click
+  if( opt.e.button === 0 ) {
+    if( opt.target === null ) {
+      // while drawingArrow
+      if( isDrawArrow() ) {
+        console.log( "ED 1 display null" );
+        abortDrawArrow();
+        return;
+      }
+    }
+    else {
+      // while drawingArrow
+      if( isDrawArrow() ) {
+        console.log( "ED 1 display target" );
+        endDrawArrow( opt.e.x, opt.e.y, opt.target );
+        return
+      }
+    }
+  }
    // RightClick
-  if (opt.e.button === 2) {
+  if( opt.e.button === 2 ) {
     // on the background of canvas
-    if (opt.target === null) {
+    if( opt.target === null ) {
+      // while drawingArrow
+      if( isDrawArrow() ) {
+        console.log( "ED 2 display null" );
+        abortDrawArrow();
+        return;
+      }
       // if already popping then abort also
       if ( !allowPopup() ) {
         removeContextElementC();
@@ -284,13 +471,13 @@ canvas.on( 'mouse:down', function (opt) {
     }
     else {
       // a Faction
-      if (opt.target.elemType === "Faction") {
+      if( opt.target.elemType === "Faction" ) {
         // while drawingArrow
-        // if (isDrawArrow()) {
-        //   console.log( "ED 2 display target" );
-        //   endDrawArrow( opt.e.x, opt.e.y, opt.target );
-        //   return
-        // }
+        if( isDrawArrow() ) {
+          console.log( "ED 2 display target" );
+          endDrawArrow( opt.e.x, opt.e.y, opt.target );
+          return
+        }
         // console.log( "RC: ",opt );
         // console.log( "  F:",_listFaction[opt.target.id] );
         if( allowPopup() ) {
@@ -315,6 +502,39 @@ canvas.on( 'mouse:down', function (opt) {
     alert( "X="+opt.e.x+", Y="+opt.e.y );
   }
 });
+
+canvas.on( 'mouse:move', function (opt) {
+  //console.log( 'M', opt );
+  if( isDrawArrow() ) {
+    console.log( "M udateDrawArrow", opt.absolutePointer );
+    updateDrawArrow( opt.absolutePointer);
+  }
+});
+
+canvas.on( 'object:moved', (opt) => {
+  // opt.target is an ActiveSelection or a 'rawObject'
+  console.log( 'object:moved', opt );
+  //console.log( '  moved ', opt.target.type );
+  //console.log( '  moved ', typeof(opt.target) );
+
+  if( opt.target.type === "activeSelection" ) {
+    console.log( '  moving activeSelection', opt.target );
+    opt.target.forEachObject( (itemF, idx) => {
+      if( itemF.model.type === "FactionM" ) {
+        movedFactionF( itemF );
+      }
+    });
+  }
+  else if( opt.target.model && opt.target.model.type === "FactionM" ) {
+    movedFactionF( opt.target );
+  }
+});
+
+function movedFactionF( itemF ) {
+  console.log( 'movedFactionF ', itemF.model.name );
+  let allRelationM = findRelationMWith( itemF.model );
+  allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
+}
 // ******************************************************* End - Fabric Callback
 
 // *****************************************************************************

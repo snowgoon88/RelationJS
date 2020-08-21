@@ -67,11 +67,6 @@ export function addFactionF( canvas, factionM, posV ) {
   
   return labelF;                               
 }
-export function movedFactionF( itemF ) {
-  console.log( 'movedFactionF ', itemF.model.name );
-  let allRelationM = findRelationMWith( itemF.model );
-  allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
-}
 export function editFactionF( labelF, factionM ) {
   let colorRGB = factionM.color;
   let colRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 0.2)';
