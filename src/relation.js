@@ -14,15 +14,23 @@ import {getIdMaxFaction,
 import {addFactionF,
         editFactionF} from './views/factionF';
 
+import {getIdMaxPerson,
+        makeNewPersonM, makeNewPersonIdM} from './models/personM';
+import {PersonF} from './views/personF';
+
 import {makeNewRelationM, makeNewRelationIdM} from './models/relationM';
 import {RelationF} from './views/relationF';
 
-import {getListRelationM, findRelationMWith, getRelationL,
-        addToRelationM, setListRelationL } from './models/list_relationM';
+import { getListPersonM, getPersonL,
+         addToPersonM } from './models/list_personM';
+import { getListRelationM, findRelationMWith, getRelationL,
+         addToRelationM, setListRelationL, delFromRelationL }
+from './models/list_relationM';
 
 import {createContextMenuC} from './components/menuC.jsx';
 import {createFactionC} from './components/factionC.jsx';
 import {createRelationC} from './components/relationC.jsx';
+import {createPersonC} from './components/personC.jsx';
 // *****************************************************************************
 // ****************************************************************** body Event
 // debug Event at body level -> look at target
@@ -101,14 +109,14 @@ function editFactionActionL( id, fields ) {
 function delFactionActionL( dummyV, factionIDX ) {
   console.log( "__delFaction", factionIDX );
   
-  if (_listFactionM[factionIDX]) {
+  if( _listFactionM[factionIDX] ) {
     let factionM = _listFactionM[factionIDX];
     if (factionM != null ) {
       // Remove all Relation to this faction
       getListRelationM().forEach( (item, index) => {
         if (item != null) {
           if (item.isRelated( factionM )) {
-            delRelationActionL( item.id );
+            delFromRelationL( item.id );
           }
         }
       });
@@ -128,7 +136,16 @@ function findFactionMwithName( name ) {
 }
 // ********************************************************** END - ListFactionM
 
-var _listPersonM = [];
+//var _listPersonM = [];
+// ***************************************************************** ListPersonM
+// fields = {name, listFactionM} 
+function newPersonAction( fields, posV ) {
+  var npM = makeNewPersonM( fields );
+  var npF = new PersonF( canvas, npM, posV );
+  npM.viewF = npF;
+  addToPersonM( npM );
+}
+// *********************************************************** END - ListPersonM
 
 
 
@@ -183,6 +200,16 @@ function editRelationActionL( id, fields ) {
   canvas.renderAll();
 }
 
+// function delRelationActionL( relationIDX ) {
+//   console.log( "__delRelation", relationIDX );
+
+//   if( getRelationL( relationIDX ) {
+//     let relationM = getRelationL( relationIDX );
+//     relationM.viewF.remove();
+//     _listRelationM[relationIDX] = null;
+//   }
+// }
+
 // *****************************************************************************
 // ********************************************************************* Actions
 function askNewFactionM( posV, dummyObj ) {
@@ -218,6 +245,29 @@ function askEditFactionL( posV, factionIDX ) {
   showContextElementC( posV, factionC );
 }
 
+const askNewPersonM = ( posV, dummyObj ) => {
+  console.log( "askNewPersonM ", posV, dummyObj );
+  
+  const gotFieldsCbk = (fields) => {
+    let listFactionM = fields.factions.map( (item,idx) =>
+                                            findFactionMwithName(item) );
+    newPersonAction( {name: fields.name,
+                      listFactionM: listFactionM},
+                     posV );
+    removeContextElementC();
+  }
+
+  const cancelCbk = removeContextElementC;
+
+  let factionsName = _listFactionM.map( (item,idx) => item.name );
+  let personC = createPersonC( { id: -1,
+                                 name: 'person_name'},
+                               factionsName,
+                               gotFieldsCbk,
+                               cancelCbk );
+  showContextElementC( posV, personC );
+}
+
 function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
   console.log( "askNewRelationM ", posV, dummyObj );
   // ask for a fields
@@ -249,6 +299,10 @@ function askEditRelationL( posV, relationIDX ) {
                                    cancelFieldsCbk );
   showContextElementC( posV, relationC );
 }
+function askDelRelationL( posV, relationIDX ) {
+  // TODO ask for confirmation ?
+  delFromRelationL( relationIDX );
+}
 
 function archiveJSONAction() {
   // make new array with data to archive
@@ -259,7 +313,7 @@ function archiveJSONAction() {
     }
   });
   let archivePerson = [];
-  _listPersonM.forEach( (item, index) => {
+  getListPersonM().forEach( (item, index) => {
     if (item) {
       archivePerson.push( {personA: item.toArchive()} );
     }
@@ -435,18 +489,18 @@ const handleDummy = ( obj, pos ) => {
 }
 var _createContextMenu = [
   {label:"New Faction", cbk: askNewFactionM}, //( x, y, okCbk, cancelCbk )},
-  {label:"New Person", cbk: handleDummy}, //askNewPersonM}   // ??
+  {label:"New Person", cbk: askNewPersonM}   // ??
 ];
 var _factionContextMenu = [
   {label:"Edit", cbk: askEditFactionL},
   {label:"New Relation", cbk: startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
-  {label: "Delete", cbk: handleDummy}, //delFactionActionL} // TODO ask ?
+  {label: "Delete", cbk: delFactionActionL} // TODO ask ?
 ];
 var _relationContextMenu = [
   {label:"Edit", cbk: askEditRelationL},
   {label:"<hr>",cbk:null}, // separator
-  {label: "Delete", cbk: handleDummy}, //askDelRelationL}
+  {label: "Delete", cbk: askDelRelationL}
 ]
 
 var contextMenuE = document.getElementById( 'context_menu' );

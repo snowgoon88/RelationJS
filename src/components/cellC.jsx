@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import reactCSS from 'reactcss';
 import { SwatchesPicker } from 'react-color'
 
+import { colorToRGBAString } from '../utils/color.js';
+
 /*
 import {TextCellC, ColorCellC} from 'path/cellC.jsx';
 */
@@ -63,7 +65,8 @@ export function ColorCellC( props ) {
   const styles = reactCSS( {
     'default' : {
       color: {
-        background: `rgba(${ color.r }, ${ color.g }, ${ color.b }, ${ color.a })`,
+        //background: `rgba(${ color.r }, ${ color.g }, ${ color.b }, ${ color.a })`,
+        background: colorToRGBAString( color ),
       },
     }
   });
