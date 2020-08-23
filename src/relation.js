@@ -7,6 +7,8 @@ import {fabric} from 'fabric';
 import {Vec} from './utils/vec';
 import {allSetSelectable,removeFromAllSelectable,
         allowPopup,setPopable} from './utils/select_pop';
+import { ListModelM } from './models/list_modelM';
+
 
 import {getIdMaxFaction,
         makeNewFactionM,
@@ -20,12 +22,6 @@ import {PersonF} from './views/personF';
 
 import {makeNewRelationM, makeNewRelationIdM} from './models/relationM';
 import {RelationF} from './views/relationF';
-
-import { getListPersonM, getPersonL,
-         addToPersonM } from './models/list_personM';
-import { getListRelationM, findRelationMWith, getRelationL,
-         addToRelationM, setListRelationL, delFromRelationL }
-from './models/list_relationM';
 
 import {createContextMenuC} from './components/menuC.jsx';
 import {createFactionC} from './components/factionC.jsx';
@@ -113,10 +109,10 @@ function delFactionActionL( dummyV, factionIDX ) {
     let factionM = _listFactionM[factionIDX];
     if (factionM != null ) {
       // Remove all Relation to this faction
-      getListRelationM().forEach( (item, index) => {
+      listRelationM.forEachModelM( (item, index) => {
         if (item != null) {
           if (item.isRelated( factionM )) {
-            delFromRelationL( item.id );
+            listRelationM.delModelL( item.id );
           }
         }
       });
@@ -138,16 +134,31 @@ function findFactionMwithName( name ) {
 
 //var _listPersonM = [];
 // ***************************************************************** ListPersonM
+var listPersonM = new ListModelM();
 // fields = {name, listFactionM} 
 function newPersonAction( fields, posV ) {
   var npM = makeNewPersonM( fields );
   var npF = new PersonF( canvas, npM, posV );
   npM.viewF = npF;
-  addToPersonM( npM );
+  listPersonM.addModelM( npM );
+}
+function editPersonActionL( id, fields ) {
+  let personM = listPersonM.getModelL( id );
+  personM.edit( fields );
+  let view = personM.viewF;
+  view.edit( personM );
+  listPersonM.editModelL( id, personM );
+  canvas.renderAll();
 }
 // *********************************************************** END - ListPersonM
 
 
+var listRelationM = new ListModelM();
+function findRelationMWith( modelM ) {
+  return listRelationM.getListModelM().filter( (itemM,index) => {
+    return (itemM != null && (itemM.srcM === modelM || itemM.destM === modelM ));
+  });
+}
 
 function newRelationAction( name, srcM, destM ) {
   // check different items
@@ -159,13 +170,12 @@ function newRelationAction( name, srcM, destM ) {
                                destFactionM:destM} );
   var nrF = new RelationF( canvas, nrM, 'red' );
   nrM.viewF = nrF;
-  addToRelationM( nrM );
+  listRelationM.addModelM( nrM );
 
   // deselect everything except new relation
   canvas.discardActiveObject();
   nrF.setActive();
 }
-
 
 function addRelationActionA( relationA ) {
   console.log( "addRelationActionA", relationA );
@@ -188,15 +198,15 @@ function addRelationActionA( relationA ) {
   nrM.viewF = nrF;
   nrF.setCtrlPt( relationA.viewInfo.posCtrl );
   nrF.setInactive();
-  addToRelationM( nrM );
+  listRelationM.addModelM( nrM );
 }
 
 function editRelationActionL( id, fields ) {
-  let relationM = getRelationL( id );
+  let relationM = listRelationM.getModelL( id );
   relationM.edit( fields );
   let view = relationM.viewF;
   view.edit( relationM );
-  setListRelationL( id, relationM );
+  listRelationM.editModelL( id, relationM );
   canvas.renderAll();
 }
 
@@ -267,6 +277,22 @@ const askNewPersonM = ( posV, dummyObj ) => {
                                cancelCbk );
   showContextElementC( posV, personC );
 }
+function askEditPersonL( posV, personIDX ) {
+  let personM = listPersonM.getModelL( personIDX );
+  const gotFieldsCbk = ( fields ) => {
+    editPersonActionL( personM.id, fields );
+    removeContextElementC();
+  }
+  const cancelFieldsCbk = () => {
+    removeContextElementC();
+  }
+  let factionsName = _listFactionM.map( (item,idx) => item.name );
+  let personC = createPersonC( personM,
+                                   factionsName,
+                                   gotFieldsCbk,
+                                   cancelFieldsCbk );
+  showContextElementC( posV, personC );
+}
 
 function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
   console.log( "askNewRelationM ", posV, dummyObj );
@@ -286,7 +312,7 @@ function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
   showContextElementC( posV, relationC );
 }
 function askEditRelationL( posV, relationIDX ) {
-  let relationM = getRelationL( relationIDX );
+  let relationM = listRelationM.getModelL( relationIDX );
   const gotFieldsCbk = ( fields ) => {
     editRelationActionL( relationM.id, fields );
     removeContextElementC();
@@ -301,7 +327,7 @@ function askEditRelationL( posV, relationIDX ) {
 }
 function askDelRelationL( posV, relationIDX ) {
   // TODO ask for confirmation ?
-  delFromRelationL( relationIDX );
+  listRelationM.delModelL( relationIDX );
 }
 
 function archiveJSONAction() {
@@ -313,13 +339,13 @@ function archiveJSONAction() {
     }
   });
   let archivePerson = [];
-  getListPersonM().forEach( (item, index) => {
+  listPersonM.forEachModelM( (item, index) => {
     if (item) {
       archivePerson.push( {personA: item.toArchive()} );
     }
   });
   let archiveRelation = [];
-  getListRelationM().forEach( (item, index) => {
+  listRelationM.forEachModelM( (item, index) => {
     if (item) {
       archiveRelation.push( {relationA: item.toArchive()} );
     }
@@ -497,11 +523,16 @@ var _factionContextMenu = [
   {label:"<hr>",cbk:null}, // separator
   {label: "Delete", cbk: delFactionActionL} // TODO ask ?
 ];
+var _personContextMenu = [
+  {label:"Edit", cbk: askEditPersonL},
+];
 var _relationContextMenu = [
   {label:"Edit", cbk: askEditRelationL},
   {label:"<hr>",cbk:null}, // separator
   {label: "Delete", cbk: askDelRelationL}
 ]
+
+
 
 var contextMenuE = document.getElementById( 'context_menu' );
 // to prevent 'context menu for showing off
@@ -618,6 +649,26 @@ canvas.on( 'mouse:down', function (opt) {
           showContextElementC( posV, factionMenuC );
         }
       }
+      // a Person
+      else if( opt.target.elemType === "Person" ) {
+        // while drawingArrow
+        if( isDrawArrow() ) {
+          abortDrawArrow();
+          return
+        }
+
+        // ContextMenu for Person
+        if( allowPopup() ) {
+          let posV = new Vec(opt.e.x, opt.e.y);
+          let personMenuC = createContextMenuC( posV,
+                                                opt.target.id, // elemIDX
+                                                "Person Menu",
+                                                  _personContextMenu, // items
+                                                  removeContextElementC );
+          showContextElementC( posV, personMenuC );
+        }
+      }
+      // a Relation
       else if( opt.target.elemType === "Relation" ) {
         // while drawingArrow
         if( isDrawArrow() ) {
@@ -679,6 +730,7 @@ canvas.on( 'object:moved', (opt) => {
 function movedFactionF( itemF ) {
   console.log( 'movedFactionF ', itemF.model.name );
   let allRelationM = findRelationMWith( itemF.model );
+  console.log( '  allRelationM=', allRelationM);
   allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
 }
 // ******************************************************* End - Fabric Callback
