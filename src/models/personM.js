@@ -63,7 +63,7 @@ export function getIdMaxPerson() { return _idmax_person; }
 export function makeNewPersonM( fields ) {
   return makeNewPersonIdM( _idmax_person, fields );
 }
-function makeNewPersonIdM( id, fields ) {
+export function makeNewPersonIdM( id, fields ) {
   if (id < _idmax_person) {
     alert( "Cannot make new Person with improper id ("+id+")" );
     return;

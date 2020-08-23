@@ -142,6 +142,20 @@ function newPersonAction( fields, posV ) {
   npM.viewF = npF;
   listPersonM.addModelM( npM );
 }
+function addPersonActionA( personA ) {
+  console.log( "addPersonActionA", personA );
+
+  // need to build back a proper list of factions
+  personA.listFactionM = personA.listFactionID.map( (itemID,index) => {
+    return _listFactionM[itemID];
+  });
+  
+  var npM = makeNewPersonIdM( personA.id, personA );
+  let posV = personA.viewInfo.pos;
+  var npF = new PersonF( canvas, npM, posV );
+  listPersonM.addModelM( npM );
+}
+
 function editPersonActionL( id, fields ) {
   let personM = listPersonM.getModelL( id );
   personM.edit( fields );
