@@ -9,12 +9,10 @@ import {allSetSelectable,removeFromAllSelectable,
         allowPopup,setPopable} from './utils/select_pop';
 import { ListModelM } from './models/list_modelM';
 
-
 import {getIdMaxFaction,
         makeNewFactionM,
         makeNewFactionIdM } from './models/factionM';
-import {addFactionF,
-        editFactionF} from './views/factionF';
+import { FactionF } from './views/factionF';
 
 import {getIdMaxPerson,
         makeNewPersonM, makeNewPersonIdM} from './models/personM';
@@ -70,44 +68,39 @@ var canvas = new fabric.Canvas( 'fabric_canvas', {
 
 // *****************************************************************************
 // **************************************************************** ListFactionM
-var _listFactionM = [];
+//var _listFactionM = [];
+var listFactionM = new ListModelM();
 function newFactionAction( fields, posV ) {
   console.log( "newFactionAction fields=",fields );
-  var newM = makeNewFactionM( fields );
-  var newF = addFactionF( canvas, newM, posV );
-  _listFactionM.push( newM );
+  var nfM = makeNewFactionM( fields );
+  var nfF = new FactionF( canvas, nfM, posV );
+  console.log( "  factioM=", nfM );
+  listFactionM.addModelM( nfM );
 }
 function addFactionActionA( factionA ) {
   console.log( "addFactionAction", factionA );
-  if (factionA.id < 0) {
-    alert( "Cannot addFaction with improper id ("+factionA.id+")" );
-    return;
-  }
-  if (_listFactionM[factionA.id]) {
-    alert( "Cannot addFaction over existing one (id="+factionA.id+")" );
-    return;
-  }
 
-  let newM = makeNewFactionIdM( factionA.id, factionA );
+  let nfM = makeNewFactionIdM( factionA.id, factionA );
   let posV = factionA.viewInfo.pos;
-  var newF = addFactionF( canvas, newM, posV );
-  _listFactionM.push( newM );
+  var nfF = new FactionF( canvas, nfM, posV );
+  listFactionM.addModelM( nfM );
 }
 function editFactionActionL( id, fields ) {
-  let factionM = _listFactionM[id];
+  let factionM = listFactionM.getModelL( id );
   factionM.edit( fields );
   let view = factionM.viewF;
-  editFactionF( view, factionM );
-  _listFactionM[factionM.id] = factionM;
+  console.log( "edtFactionActionL factionM=", factionM );
+  view.edit( factionM );
+  listFactionM.editModelL( factionM.id, factionM );
   canvas.renderAll();
 }
 // used as menu callback,  so (posV, idx)
 function delFactionActionL( dummyV, factionIDX ) {
   console.log( "__delFaction", factionIDX );
   
-  if( _listFactionM[factionIDX] ) {
-    let factionM = _listFactionM[factionIDX];
-    if (factionM != null ) {
+  if( listFactionM.getModelL( factionIDX )) {
+    let factionM = listFactionM.getModelL( factionIDX );
+    if( factionM != null ) {
       // Remove all Relation to this faction
       listRelationM.forEachModelM( (item, index) => {
         if (item != null) {
@@ -116,11 +109,18 @@ function delFactionActionL( dummyV, factionIDX ) {
           }
         }
       });
-      
-      let itemF = _listFactionM[factionIDX].viewF;
-      removeFromAllSelectable( itemF );
-      canvas.remove( itemF );
-      _listFactionM[factionIDX] = null;
+
+      // Recompute factions if PersonM was linked to factionM
+      listPersonM.forEachModelM( (item, index) => {
+        if( item.isRelated( factionM )) {
+          let factionsForPerson = item.listFactionM.filter( (itemM) => {
+            return itemM != factionM; });
+          editPersonActionL( item.id, {listFactionM: factionsForPerson} );
+        }
+      });
+
+      // Remove the faction itself
+      listFactionM.delModelL( factionIDX );
     }
   }
   else {
@@ -128,7 +128,7 @@ function delFactionActionL( dummyV, factionIDX ) {
   }
 }
 function findFactionMwithName( name ) {
-  return _listFactionM.find( (item,idx) => item.name == name );
+  return listFactionM.getListModelM().find( (item,idx) => item.name == name );
 }
 // ********************************************************** END - ListFactionM
 
@@ -147,16 +147,18 @@ function addPersonActionA( personA ) {
 
   // need to build back a proper list of factions
   personA.listFactionM = personA.listFactionID.map( (itemID,index) => {
-    return _listFactionM[itemID];
+    return listFactionM.getModelL( itemID );
   });
   
   var npM = makeNewPersonIdM( personA.id, personA );
   let posV = personA.viewInfo.pos;
   var npF = new PersonF( canvas, npM, posV );
+  npM.viewF = npF;
   listPersonM.addModelM( npM );
 }
 
 function editPersonActionL( id, fields ) {
+  console.log( "editPersonActionL id=",id,"fields=",fields );
   let personM = listPersonM.getModelL( id );
   personM.edit( fields );
   let view = personM.viewF;
@@ -201,8 +203,8 @@ function addRelationActionA( relationA ) {
   //   alert( "Cannot addRerlation over existing one (id="+relationA.id+")" );
   //   return;
   // }
-  let srcFactionM = _listFactionM[relationA.srcId];
-  let destFactionM = _listFactionM[relationA.destId];
+  let srcFactionM = listFactionM.getModelL( relationA.srcId )
+  let destFactionM = listFactionM.getModelL( relationA.destId );
 
   var nrM = makeNewRelationIdM( relationA.id,
                                 {name: relationA.name,
@@ -254,7 +256,7 @@ function askNewFactionM( posV, dummyObj ) {
 }
 function askEditFactionL( posV, factionIDX ) {
   console.log( "askEditFactionL factionIDX=", factionIDX );
-  let factionM = _listFactionM[factionIDX];
+  let factionM = listFactionM.getModelL( factionIDX );
   const gotFieldsCbk = ( fields ) => {
     editFactionActionL( factionM.id, fields );
     removeContextElementC();
@@ -283,7 +285,7 @@ const askNewPersonM = ( posV, dummyObj ) => {
 
   const cancelCbk = removeContextElementC;
 
-  let factionsName = _listFactionM.map( (item,idx) => item.name );
+  let factionsName = listFactionM.getListModelM().map( (item,idx) => item.name );
   let personC = createPersonC( { id: -1,
                                  name: 'person_name'},
                                factionsName,
@@ -294,20 +296,27 @@ const askNewPersonM = ( posV, dummyObj ) => {
 function askEditPersonL( posV, personIDX ) {
   let personM = listPersonM.getModelL( personIDX );
   const gotFieldsCbk = ( fields ) => {
+    let listFactionM = fields.factions.map( (item,idx) =>
+                                            findFactionMwithName(item) );
+    fields.listFactionM = listFactionM;
     editPersonActionL( personM.id, fields );
     removeContextElementC();
   }
   const cancelFieldsCbk = () => {
     removeContextElementC();
   }
-  let factionsName = _listFactionM.map( (item,idx) => item.name );
+  let factionsName = listFactionM.getListModelM().map( (item,idx) => item.name );
   let personC = createPersonC( personM,
                                    factionsName,
                                    gotFieldsCbk,
                                    cancelFieldsCbk );
   showContextElementC( posV, personC );
 }
-
+function askDelPersonL( posV, personIDX ) {
+  console.log( "askDelPersonL idx=", personIDX );
+  // TODO ask for confirmation ?
+  listPersonM.delModelL( personIDX );
+}
 function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
   console.log( "askNewRelationM ", posV, dummyObj );
   // ask for a fields
@@ -347,7 +356,7 @@ function askDelRelationL( posV, relationIDX ) {
 function archiveJSONAction() {
   // make new array with data to archive
   let archiveFaction = [];
-  _listFactionM.forEach( (item, index) => {
+  listFactionM.forEachModelM( (item, index) => {
     if (item) {
       archiveFaction.push( {factionA: item.toArchive()} );
     }
@@ -391,7 +400,7 @@ function populateAllFromJSONAction( doc ) {
       if (item.factionA.viewInfo) {
         console.log( "populate with", item.factionA );
         addFactionActionA( item.factionA );//DEL, item.factionA.viewInfo.pos );
-        console.log( "_listFactionM size=",_listFactionM.length, getIdMaxFaction() );
+        console.log( "_listFactionM size=",listFactionM.getLength(), getIdMaxFaction() );
       }
       else {
         alert( "Populate Faction from factionA without viewInfo" );
@@ -451,7 +460,7 @@ function readAllFromFileAction( file ) {
 function startRelationFromFactionL( posV, factionIDX ) {
   console.log( 'startRelationFromFactionL', posV );
   // need to find FactionF related to this factionM
-  let factionF = _listFactionM[factionIDX].viewF;
+  let factionF = listFactionM.getModelL( factionIDX ).viewF;
   startDrawArrow( factionF, posV );
 }
 
@@ -467,7 +476,8 @@ function startDrawArrow( srcF, mouseV ) {
   _stateDA = "drawing";
   _srcFDA = srcF;
   // Create a new line from srcF.left/top to mouseP.x/y
-  _lineDA = new fabric.Line( [srcF.left, srcF.top, mouseV.x, mouseV.y ], {
+  _lineDA = new fabric.Line( [srcF.objF.left, srcF.objF.top,
+                              mouseV.x, mouseV.y ], {
     stroke: 'red',
     selectable: false,
   });
@@ -539,6 +549,8 @@ var _factionContextMenu = [
 ];
 var _personContextMenu = [
   {label:"Edit", cbk: askEditPersonL},
+  {label:"<hr>",cbk:null}, // separator
+  {label: "Delete", cbk: askDelPersonL}
 ];
 var _relationContextMenu = [
   {label:"Edit", cbk: askEditRelationL},
@@ -753,7 +765,7 @@ function movedFactionF( itemF ) {
 // ********************************************************************* Buttons
 var btnInfoE = document.getElementById( "btn_info" );
 btnInfoE.addEventListener( 'click', () => {
-  console.log( "_listFactionM size=",_listFactionM.length, getIdMaxFaction() );
+  console.log( "_listFactionM size=", listFactionM.getLength(), getIdMaxFaction() );
   archiveJSONAction();
 });
 

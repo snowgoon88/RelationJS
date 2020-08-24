@@ -1,6 +1,7 @@
 import {fabric} from 'fabric';
 import { addToAllSelectable, removeFromAllSelectable } from '../utils/select_pop';
 import { colorToRGBAString } from '../utils/color.js';
+import {Vec} from '../utils/vec';
 
 /*
 import {PersonF} from 'path/personF';
@@ -107,6 +108,14 @@ export class PersonF {
     // TODO check this is legit ?
   }
   edit( personM ) {
+
+    let debugObject = (group) => {
+      console.log( "DEBUG group" );
+      group.getObjects().forEach( (objF,idx) => {
+        console.log( "  obj["+idx+"]=",JSON.parse(JSON.stringify(objF)) );
+      });
+    }
+    
     this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
 
     // new factionsColor ?
@@ -115,22 +124,39 @@ export class PersonF {
       newColors.push( _colDefaultRGBA );
     }
     if( JSON.stringify(newColors) != JSON.stringify(this.factionsColor) ) {
+      this.factionsColor = newColors;
+      // store position within group
+      let posV = new Vec( this.itemsF[1].left, this.itemsF[1].top );
+      
       console.log( "PersonF.edit changing Pies" );
+      debugObject( this.groupF );
       // must remove all previous pies from group
-      this.itemsF.forEach( (item,index) => {
-        if( index > 0) {
-          this.groupF.remove( item );
-        }
-      });
+      console.log( "Removing items=",JSON.parse(JSON.stringify(this.itemsF)) );
+      // as remove from groupF deletes the element, it changes itemsF I guess
+      while( this.itemsF.length > 1) {
+        let itemToDelete = this.itemsF.pop();
+        console.log( "  remove obj=",JSON.parse(JSON.stringify(itemToDelete)) );
+        this.groupF.remove( itemToDelete );
+      }
+      // this.itemsF.forEach( (item,index) => {
+      //   console.log( "  obj["+index+"]=",JSON.parse(JSON.stringify(item)) );
+      //   if( index > 0) {
+      //     this.groupF.remove( item );
+      //     console.log( "  remove obj=",JSON.parse(JSON.stringify(item)) );
+      //   }
+      // });
+      debugObject( this.groupF );
+      
       this.itemsF = [this.labelF];
        // Colored Pie for Factions
       //let tmpColor = [ 'red', 'blue', 'green' ];//, 'black' ];
-      let angle = Math.PI * 2 / factionsColor.length;
+      let angle = Math.PI * 2 / this.factionsColor.length;
       let startAngle = -Math.PI / 2.0;
       console.log( "  PersonF pieAngle=", angle, angle/Math.PI*180.0 );
       // The trick is to draw a circle with large stroke. Filling does not
       // work as it draws arcs.
       this.factionsColor.forEach( (item,idx) => {
+        console.log( "  pie from",startAngle,"to", startAngle + angle );
         let colorRGBA = Object.assign({}, item);
         colorRGBA.a = 0.2;
         let colorString = colorToRGBAString( colorRGBA );
@@ -149,13 +175,16 @@ export class PersonF {
         });
         this.itemsF.push( tmpSliceOfPieF );
         this.groupF.add( tmpSliceOfPieF );
+
+        startAngle += angle;
       });
+      debugObject( this.groupF );
     }
   }
   remove() {
-    //removeFromAllSelectable( this.labelF );
+    removeFromAllSelectable( this.groupF );
     
-    //canvas.remove( this.labelF );
+    this.canvas.remove( this.groupF );
   }
   toArchive() {
     var archive = {

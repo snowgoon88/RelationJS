@@ -196,13 +196,13 @@ export class RelationF {
   _updateWithNewEnds( srcF, destF ) {
     console.log( '  update', this.model.name );
     console.log( '  srcF', srcF );
-    console.log( '    co', srcF.calcCoords() );
+    console.log( '    co', srcF.objF.calcCoords() );
     console.log( '  destF', destF );
-    console.log( '    co', destF.calcCoords() );
-    destF.setCoords();
+    console.log( '    co', destF.objF.calcCoords() );
+    //destF.objF.setCoords();
     console.log( '  destF', destF );
-    let posSrcF = getPosF( srcF );
-    let posDestF = getPosF( destF );
+    let posSrcF = getPosF( srcF.objF );
+    let posDestF = getPosF( destF.objF );
     let srcNew =  new Vec( posSrcF.left,  posSrcF.top );
     let destNew = new Vec( posDestF.left, posDestF.top);
     
@@ -238,8 +238,8 @@ export class RelationF {
     // taking into account the BBOX
     let srcF = this.model.srcM.viewF;
     let destF = this.model.destM.viewF;
-    let posSrcF = getPosF( srcF );
-    let posDestF = getPosF( destF );
+    let posSrcF = getPosF( srcF.objF );
+    let posDestF = getPosF( destF.objF );
     
     // update arrowHead
     let vecSC = this.ctrlPt.minus( this.srcPt );

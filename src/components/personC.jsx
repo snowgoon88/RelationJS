@@ -8,10 +8,21 @@ import { createPersonC } from 'path/personC.jsx';
 
 // *****************************************************************************
 // ********************************************************************* PersonC
-// PROPS: id, name, factionsName, okCbk, cancelCbk
+// PROPS: - id,
+//        - name
+//        - listFactionM
+//        - factionsName=[ name_of_FactionM ]
+//        - okCbk( {name, factions=[ name_of_faction ]} )
+//        - cancelCbk()
 const PersonC = (props) => {
   const [name, setName] = React.useState( props.name );
   const [factions, setFactions] = React.useState( [] );
+
+  let choicesName = [];
+  if( props.listFactionM ) {
+    choicesName = props.listFactionM.map( (item,idx) => item.name );
+  }
+  console.log( "PersonC props=",props );
   
   const handleBtnOK = () => {
     props.okCbk( {name: name, factions: factions} );
@@ -45,6 +56,7 @@ const PersonC = (props) => {
               <td>
                 <SelectC
                   options={props.factionsName}
+                  choices={choicesName}
                   value=""
                   onChange={setFactions}
                 />
@@ -62,6 +74,7 @@ export function createPersonC( fieldsPersonM, factionsName, okCbk, cancelCbk ) {
     <PersonC
       id={fieldsPersonM.id}
       name={fieldsPersonM.name}
+      listFactionM={fieldsPersonM.listFactionM}
       factionsName={factionsName}
       okCbk={okCbk}
       cancelCbk={cancelCbk}

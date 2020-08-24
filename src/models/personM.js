@@ -51,10 +51,16 @@ export class PersonM {
       if( key.localeCompare( 'name' ) == 0 ) {
         this.name = value;
       }
-      if( key.localeCompare( 'listFactionM' ) == 0 ) {
+      else if( key.localeCompare( 'listFactionM' ) == 0 ) {
         this.listFactionM = value;
       }
+      // else {
+      //   alert( "PersonM.edit unknown field="+key );
+      // }
     }
+  }
+  isRelated( factionM ) {
+    return this.listFactionM.includes( factionM );
   }
 }
 // ***** to Manage Person.id

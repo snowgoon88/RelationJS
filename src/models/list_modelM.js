@@ -10,14 +10,18 @@ export class ListModelM {
     this.data = [];
   }
 
+  getLength() { return this.data.length; }
+
   getModelL( modelIDX ) {
     return this.data[modelIDX];
   }
+  /** Return only non-null ModelM */
   getListModelM() {
-    return this.data;
+    return this.data.filter( (item) => item != null );;
   }
+  /** Apply only on non-null ModelM */
   forEachModelM( funCbk ) {
-    this.data.forEach( funCbk );
+    this.getListModelM().forEach( funCbk );
   }
 
   addModelM( modelM ) {

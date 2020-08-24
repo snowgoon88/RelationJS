@@ -10,12 +10,13 @@ import { SelectC } from 'path/selectC.jsx';
 // a list of [labels]
 //
 // PROPS: - options = [ names ] : possible choices
+//        - choices = [ names ] : starting choices
 //        - value : default value in input field
-//        - onChange : Cbk when a change in choices is made
+//        - onChange( [ names ] ) : Cbk when a change in choices is made
 //        TODO - choices = [ name ] : existing choices
 
 export function SelectC(props) {
-  console.log( "SelectC.create, options=", props.options );
+  console.log( "SelectC.create, options=", props.options, "choices=", props.choices );
   // value of the input field
   const [value, setValue] = React.useState( props.value );
   // hide/show the popup where options are displayed
@@ -24,8 +25,12 @@ export function SelectC(props) {
   const [options, setOptions] = React.useState( props.options );
   // idx of the option with the current choice
   const [idxChoice, setIdxChoice] = React.useState( 0 );
-  // list of current choices already made
-  const [choices, setChoices] = React.useState( [] );
+  // list of current choices already made [ {ids_of_choices in props.options, label} ]
+  let startChoices = props.choices.map( (name,idx) => {
+    return {id:props.options.indexOf( name ), label:name};
+  });
+  console.log( "  startChoices=", startChoices );
+  const [choices, setChoices] = React.useState( startChoices );
 
   // reference to input Element, through each instance of Component
   // easier to get value, NEED ref={inputRef} in input DOM
@@ -45,7 +50,7 @@ export function SelectC(props) {
   const removeChoice = (id) => {
     let tmpChoices = choices.filter( (item) => item.id != id );
     setChoices( tmpChoices );
-    props.onChange( tmpChoices );
+    props.onChange( tmpChoices.map( (item,idx) => item.label ) );
   }
 
   // ******************************************************************* actions
