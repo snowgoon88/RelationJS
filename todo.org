@@ -14,6 +14,9 @@ disable rightclick when already popping out
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
 * _CURRENT_ : color for Faction
+
+* _CURRENT_ : update this.expandedF when Faction or Person moves
+
 * TODO [5/7] Fabric.js
 ** TODO Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction

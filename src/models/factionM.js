@@ -35,7 +35,7 @@ export class FactionM {
       color: this.color,
     };
     if (this.viewF) {
-      archive['viewInfo'] = { pos: {x:this.viewF.left, y:this.viewF.top }};
+      archive['viewInfo'] = { pos: {x:this.viewF.objF.left, y:this.viewF.objF.top }};
     }
     else {
       archive['viewInfo'] = null;

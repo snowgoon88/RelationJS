@@ -53,7 +53,7 @@ export class PersonF {
     // work as it draws arcs.
     this.factionsColor.forEach( (item,idx) => {
       let colorRGBA = Object.assign({}, item);
-      colorRGBA.a = 0.5;
+      colorRGBA.a = 1.0;
       let colorString = colorToRGBAString( colorRGBA );
       let tmpSliceOfPieF = new fabric.Circle( {
         originX: 'center',
@@ -103,7 +103,8 @@ export class PersonF {
     
     addToAllSelectable( this.groupF );
     this.canvas.add( this.groupF );
-    
+
+    this.objF = this.groupF;
     personM.viewF = this;
     // TODO check this is legit ?
   }
