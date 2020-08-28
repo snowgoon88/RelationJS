@@ -14,18 +14,18 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
+* _CURRENT_ : edit/delete on expanded
 * _CURRENT_ : color for Faction
 
-* _CURRENT_ : update this.expandedF when Faction or Person moves
 
-* TODO [5/7] Fabric.js
-** TODO Faction style (Color)
+* TODO [7/7] Fabric.js
+** DONE Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
 *** DONE Event click droit
 *** DONE Struct Faction et liste de Faction
 *** DONE Style Faction
 *** DONE React pour new Faction (sur Canvas) ?
-** TODO Group with circle and Name
+** DONE Group with circle and Name
 ** DONE [3/3] React Selection in List
 <<reactList>>
 *** style
@@ -38,14 +38,16 @@ disable rightclick when already popping out
 *** DONE creation menu : name, list Faction
 *** DONE save/load
 *** DONE group in Fabric
-*** TODO edit
-*** TODO delete
-*** TODO creation (choix faction) as circle+name
-** [5/6] Faction
+*** TODO edit => recompute expand
+*** TODO delete => recompute expand
+*** TODO creation (choix faction) as circle+name => recompute expand
+** [3/8] Faction
 *** TODO Color
 *** DONE lister
-*** DONE save
-*** DONE load
+*** TODO edit color => change everywhere ?
+*** TODO delete => change expanded
+*** TODO save => save expand state
+*** TODO load => load expand state
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
 ** DONE [3/4] Relation

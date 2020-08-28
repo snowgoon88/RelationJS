@@ -766,10 +766,16 @@ canvas.on( 'object:moved', (opt) => {
       if( itemF.model.type === "FactionM" ) {
         movedFactionF( itemF );
       }
+      else if( itemF.model.type === "PersonM" ) {
+        movedPersonF( itemF );
+      }
     });
   }
   else if( opt.target.model && opt.target.model.type === "FactionM" ) {
     movedFactionF( opt.target );
+  }
+  else if( opt.target.model && opt.target.model.type === "PersonM" ) {
+    movedPersonF( opt.target );
   }
 });
 
@@ -793,6 +799,21 @@ function movedFactionF( itemF ) {
     });
     itemF.model.viewF.expand( listChildrenM, true );
   }
+}
+// Called when a PersonF has moved
+// => recompute expandedF of every FactionM it is childrenOf
+function movedPersonF( itemF ) {
+  let personM = itemF.model;
+
+  personM.listFactionM.forEach( (factionM,idx) => {
+    if( factionM.viewF.isExpanded() ) {
+      // find all its "children" (PersonM of that factionM)
+      let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
+        return model.listFactionM.includes( factionM );
+      });
+      factionM.viewF.expand( listChildrenM, true );
+    }
+  });
 }
 // ******************************************************* End - Fabric Callback
 
