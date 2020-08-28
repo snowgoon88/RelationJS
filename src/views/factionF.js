@@ -146,6 +146,9 @@ export class FactionF {
   updatePos() {
     this.borderF.set( {'left': this.labelF.left, 'top': this.labelF.top} );
   }
+  isExpanded() {
+    return this.expandedF.get( 'visible' );
+  }
   expand( listChildrenM, flag ) {
     if( flag == false ) {
       this.expandedF.set( {'visible': false } );

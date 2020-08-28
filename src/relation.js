@@ -127,16 +127,23 @@ function delFactionActionL( dummyV, factionIDX ) {
     alert( "Cannot delFaction on non-existing faction" );
   }
 }
+// switch expanded On/Off
 function expandFactionActionL( dummyV, factionIDX ) {
   console.log( "__expandFactionActionL" );
   let factionM = listFactionM.getModelL( factionIDX );
-  // find all its "children" (PersonM of that factionM)
-  let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
-    return model.listFactionM.includes( factionM );
-  });
-  factionM.viewF.expand( listChildrenM, true );
-  // let bbox = factionM.viewF._overallBBox( listChildrenM );
-  // console.log( "  bbox=",bbox );
+
+  if( factionM.viewF.isExpanded() ) {
+    factionM.viewF.expand( null, false );
+  }
+  else {
+    // find all its "children" (PersonM of that factionM)
+    let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
+      return model.listFactionM.includes( factionM );
+    });
+    factionM.viewF.expand( listChildrenM, true );
+    // let bbox = factionM.viewF._overallBBox( listChildrenM );
+    // console.log( "  bbox=",bbox );
+  }
 }
 function findFactionMwithName( name ) {
   return listFactionM.getListModelM().find( (item,idx) => item.name == name );
@@ -556,7 +563,7 @@ var _factionContextMenu = [
   {label:"Edit", cbk: askEditFactionL},
   {label:"New Relation", cbk: startRelationFromFactionL},
   {label:"<hr>",cbk:null}, // separator
-  {label:"Expand", cbk: expandFactionActionL},
+  {label:"Expand On/Off", cbk: expandFactionActionL},
   {label:"<hr>",cbk:null}, // separator
   {label: "Delete", cbk: delFactionActionL} // TODO ask ?
 ];
@@ -766,12 +773,26 @@ canvas.on( 'object:moved', (opt) => {
   }
 });
 
+// Called when a FactionF has moved
+// => recompute all Relations to/from it
+// => if expanded, recompute expandedF
 function movedFactionF( itemF ) {
   console.log( 'movedFactionF ', itemF.model.name );
   itemF.model.viewF.updatePos();
+
+  // update relations
   let allRelationM = findRelationMWith( itemF.model );
   console.log( '  allRelationM=', allRelationM);
   allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
+
+  // update expand
+  if( itemF.model.viewF.isExpanded() ) {
+    // find all its "children" (PersonM of that factionM)
+    let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
+      return model.listFactionM.includes( itemF.model );
+    });
+    itemF.model.viewF.expand( listChildrenM, true );
+  }
 }
 // ******************************************************* End - Fabric Callback
 
