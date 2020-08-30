@@ -8,6 +8,7 @@ import {Vec} from './utils/vec';
 import {allSetSelectable,removeFromAllSelectable,
         allowPopup,setPopable} from './utils/select_pop';
 import { ListModelM } from './models/list_modelM';
+import { HandleMoveF } from './views/handle_move.js';
 
 import {getIdMaxFaction,
         makeNewFactionM,
@@ -626,6 +627,8 @@ function removeContextElementC() {
 // *****************************************************************************
 // ************************************************************* Fabric Callback
 // *****************************************************************************
+var handleMoveF = new HandleMoveF( listPersonM, findRelationMWith );
+
 canvas.on( 'mouse:down', function (opt) {
   console.log( 'canvas.mouse:down', opt, ); //_allowPopup );
 
@@ -754,67 +757,22 @@ canvas.on( 'mouse:move', function (opt) {
   }
 });
 
+/**
+ * When object are moved, need to update FactionF.expanded and RelationF
+ * Process in three steps (to avoid redundant computation, like twice the same
+ * RelationF or n times the same FactionF)
+ * 1 - make a Set for FactionF to be updated
+ * 2 - update these FactionF (if expanded) and build RelationF to be updated
+ * 3 - update these RelationF
+ */
 canvas.on( 'object:moved', (opt) => {
   // opt.target is an ActiveSelection or a 'rawObject'
   console.log( 'object:moved', opt );
   //console.log( '  moved ', opt.target.type );
   //console.log( '  moved ', typeof(opt.target) );
 
-  if( opt.target.type === "activeSelection" ) {
-    console.log( '  moving activeSelection', opt.target );
-    opt.target.forEachObject( (itemF, idx) => {
-      if( itemF.model.type === "FactionM" ) {
-        movedFactionF( itemF );
-      }
-      else if( itemF.model.type === "PersonM" ) {
-        movedPersonF( itemF );
-      }
-    });
-  }
-  else if( opt.target.model && opt.target.model.type === "FactionM" ) {
-    movedFactionF( opt.target );
-  }
-  else if( opt.target.model && opt.target.model.type === "PersonM" ) {
-    movedPersonF( opt.target );
-  }
-});
-
-// Called when a FactionF has moved
-// => recompute all Relations to/from it
-// => if expanded, recompute expandedF
-function movedFactionF( itemF ) {
-  console.log( 'movedFactionF ', itemF.model.name );
-  itemF.model.viewF.updatePos();
-
-  // update relations
-  let allRelationM = findRelationMWith( itemF.model );
-  console.log( '  allRelationM=', allRelationM);
-  allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
-
-  // update expand
-  if( itemF.model.viewF.isExpanded() ) {
-    // find all its "children" (PersonM of that factionM)
-    let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
-      return model.listFactionM.includes( itemF.model );
-    });
-    itemF.model.viewF.expand( listChildrenM, true );
-  }
-}
-// Called when a PersonF has moved
-// => recompute expandedF of every FactionM it is childrenOf
-function movedPersonF( itemF ) {
-  let personM = itemF.model;
-
-  personM.listFactionM.forEach( (factionM,idx) => {
-    if( factionM.viewF.isExpanded() ) {
-      // find all its "children" (PersonM of that factionM)
-      let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
-        return model.listFactionM.includes( factionM );
-      });
-      factionM.viewF.expand( listChildrenM, true );
-    }
-  });
-}
+  handleMoveF.hasMoved( opt.target );
+});  
 // ******************************************************* End - Fabric Callback
 
 // *****************************************************************************

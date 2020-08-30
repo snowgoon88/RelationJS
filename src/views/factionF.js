@@ -144,7 +144,9 @@ export class FactionF {
   }
   // this.labelF has moved, move this.borderF
   updatePos() {
-    this.borderF.set( {'left': this.labelF.left, 'top': this.labelF.top} );
+    // need the 'real' position of this.labelF
+    let posLabel = getPosF( this.labelF );
+    this.borderF.set( {'left': posLabel.left, 'top': posLabel.top} );
   }
   isExpanded() {
     return this.expandedF.get( 'visible' );
