@@ -82,7 +82,6 @@ export class PersonF {
       id: personM.id,
       model: personM,
       elemType: "Person",
-
       hasRotatingPoint: false,
       lockRotation: true,
       lockScalingX: true,
@@ -118,7 +117,9 @@ export class PersonF {
     }
     
     this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
-
+    this.labelF.initDimensions(); // update width and height
+    this.groupF.addWithUpdate();  // for the group
+    
     // new factionsColor ?
     let newColors = personM.listFactionM.map( (item,idx) => item.color );
     if( newColors.length === 0 ) {

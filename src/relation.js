@@ -183,6 +183,16 @@ function editPersonActionL( id, fields ) {
   let view = personM.viewF;
   view.edit( personM );
   listPersonM.editModelL( id, personM );
+  // can lead to update of factionM.expanded
+  personM.listFactionM.forEach( (factionM) => {
+    if( factionM.viewF.isExpanded() ) {
+      let listChildrenM = listPersonM.getListModelM().filter( (modelM) => {
+        return modelM.listFactionM.includes( factionM );
+      });
+      factionM.viewF.expand( listChildrenM, true );
+    }
+  });
+      
   canvas.renderAll();
 }
 // *********************************************************** END - ListPersonM

@@ -16,7 +16,7 @@ import { createPersonC } from 'path/personC.jsx';
 //        - cancelCbk()
 const PersonC = (props) => {
   const [name, setName] = React.useState( props.name );
-  const [factions, setFactions] = React.useState( [] );
+  const [factions, setFactions] = React.useState( props.listFactionM.map( (item,idx) => item.name ) );
 
   let choicesName = [];
   if( props.listFactionM ) {

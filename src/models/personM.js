@@ -53,6 +53,10 @@ export class PersonM {
       }
       else if( key.localeCompare( 'listFactionM' ) == 0 ) {
         this.listFactionM = value;
+        // TODO // can lead to recomputation of factionM.expand
+        // this.listFactionM.forEach( (factionM) => {
+        //   if( factionM.viewF.isExpanded() ) {
+            
       }
       // else {
       //   alert( "PersonM.edit unknown field="+key );

@@ -1,4 +1,4 @@
-* [5/5] BUG 
+* [6/6] BUG 
 ** DONE why ContextPopup is showing at start, bottom left
 set to hidden className
 ** DONE askNewFaction s'empile quand on clique dans background
@@ -6,15 +6,18 @@ set to hidden className
 disable rightclick when already popping out
 ** DONE Quand en train de nommer Relation, peut bouger Faction
 ** DONE Après load factions, create faction has id 0 !! (not max)
-* [5/7] UPD
+** DONE After edit of Person, looses factions !
+* [5/8] UPD
 ** TODO change model.viewF in model.view (and check that model.view.objF)
+** TODO When Faction/Person selected, stay colored even if not hoovered on
 ** TODO RelationC is not used
 ** DONE uniform x,y vs pos, especially in menu, ask, action
 ** DONE All Popup using the same mecanism, popupElement
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* _CURRENT_ : edit/delete on expanded
+* TODO _CURRENT_ : edit/delete on expanded
+* TODO _CURRENT_ : change bbox of Person when edited
 * _CURRENT_ : color for Faction
 
 
@@ -107,6 +110,8 @@ RelationJS>$ npx babel src --out-dir lib
 ** use FileSaver
 npm install file-saver
 faire les liens appropriés
+** use webpack
+$>npm start
 * Archive
 ** [4/5] App
 *** DONE basic test example in nav https://js.cytoscape.org/#getting-started
