@@ -44,13 +44,13 @@ disable rightclick when already popping out
 *** DONE edit => recompute expand
 *** DONE delete => recompute expand
 *** DONE creation (choix faction) as circle+name => recompute expand
-** [4/8] Faction
+** [6/8] Faction
 *** TODO Color
 *** DONE lister
 *** TODO edit color => change everywhere ?
 *** DONE delete => remove border, change expanded
-*** TODO save => save expand state
-*** TODO load => load expand state
+*** DONE save => save expand state
+*** DONE load => load expand state
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
 ** DONE [3/4] Relation

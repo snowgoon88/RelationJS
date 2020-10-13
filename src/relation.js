@@ -465,6 +465,17 @@ function populateAllFromJSONAction( doc ) {
       return;
     }
   });
+
+  // finally, expand factions that were saved expanded
+  if( archiveFaction ) {
+    archiveFaction.forEach( (item, index) => {
+      if (item.factionA.viewInfo) {
+        if( item.factionA.viewInfo.expanded ) {
+          expandFactionActionL( null, item.factionA.id );
+        }
+      }
+    });
+  }
 }
 function readAllFromFileAction( file ) {
   // Check right type (application/json)

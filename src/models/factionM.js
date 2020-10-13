@@ -35,7 +35,10 @@ export class FactionM {
       color: this.color,
     };
     if (this.viewF) {
-      archive['viewInfo'] = { pos: {x:this.viewF.objF.left, y:this.viewF.objF.top }};
+      archive['viewInfo'] = {
+        pos: {x:this.viewF.objF.left, y:this.viewF.objF.top },
+        expanded : this.viewF.isExpanded()
+      };
     }
     else {
       archive['viewInfo'] = null;
