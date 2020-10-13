@@ -161,15 +161,7 @@ function newPersonAction( fields, posV ) {
   npM.viewF = npF;
   listPersonM.addModelM( npM );
 
-  // can lead to update of factionM.expanded
-  npM.listFactionM.forEach( (factionM) => {
-    if( factionM.viewF.isExpanded() ) {
-      let listChildrenM = listPersonM.getListModelM().filter( (modelM) => {
-        return modelM.listFactionM.includes( factionM );
-      });
-      factionM.viewF.expand( listChildrenM, true );
-    }
-  });
+  updateExpanded();
 }
 function addPersonActionA( personA ) {
   console.log( "addPersonActionA", personA );
@@ -190,32 +182,14 @@ function editPersonActionL( id, fields ) {
   console.log( "editPersonActionL id=",id,"fields=",fields );
   let personM = listPersonM.getModelL( id );
 
-  // need to store list of previous FactionM of PersonM
-  let previousFactionsM = personM.listFactionM;
-  
   personM.edit( fields );
   let view = personM.viewF;
   view.edit( personM );
   listPersonM.editModelL( id, personM );
+
   // can lead to update of factionM.expanded
-  personM.listFactionM.forEach( (factionM) => {
-    if( factionM.viewF.isExpanded() ) {
-      let listChildrenM = listPersonM.getListModelM().filter( (modelM) => {
-        return modelM.listFactionM.includes( factionM );
-      });
-      factionM.viewF.expand( listChildrenM, true );
-    }
-  });
-  // for the FactionM that were present before in the PersonM
-  previousFactionsM.forEach( (factionM) => {
-    if( !(personM.listFactionM.includes( factionM )) &&  factionM.viewF.isExpanded() ) {
-      let listChildrenM = listPersonM.getListModelM().filter( (modelM) => {
-        return modelM.listFactionM.includes( factionM );
-      });
-      factionM.viewF.expand( listChildrenM, true );
-    }
-  });
-      
+  updateExpanded();
+
   canvas.renderAll();
 }
 // *********************************************************** END - ListPersonM
@@ -368,22 +342,12 @@ function askEditPersonL( posV, personIDX ) {
 function askDelPersonL( posV, personIDX ) {
   console.log( "askDelPersonL idx=", personIDX );
   // TODO ask for confirmation ?
-  // need list of FactionM of the deleted, to update expanded
-  let personM = listPersonM.getModelL( personIDX );
-  let previousFactionsM = personM.listFactionM;
 
   // remove person
   listPersonM.delModelL( personIDX );
 
-  // recompute expanded if needed
-  previousFactionsM.forEach( (factionM) => {
-    if( factionM.viewF.isExpanded() ) {
-      let listChildrenM = listPersonM.getListModelM().filter( (modelM) => {
-        return modelM.listFactionM.includes( factionM );
-      });
-      factionM.viewF.expand( listChildrenM, true );
-    }
-  });
+  // recompute expanded
+  updateExpanded();
 }
 function askNewRelationM( posV, dummyObj, okCbk, cancelCbk ) {
   console.log( "askNewRelationM ", posV, dummyObj );
@@ -598,6 +562,21 @@ function isDrawArrow() {
   return _stateDA === "drawing";
 }
 // *************************************************************** END DrawArrow
+
+// *****************************************************************************
+// ************************************************************** updateExpanded
+function updateExpanded() {
+  // Re-expand for all expanded Factions
+  listFactionM.forEachModelM( (factionM) => {
+    if( factionM.viewF.isExpanded() ) {
+      let listChildrenM = listPersonM.getListModelM().filter( (modelM) => {
+        return modelM.listFactionM.includes( factionM );
+      });
+      factionM.viewF.expand( listChildrenM, true );
+    }
+  });
+}
+// ********************************************************** END updateExpanded
 
 
 // *****************************************************************************

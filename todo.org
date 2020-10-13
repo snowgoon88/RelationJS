@@ -16,7 +16,7 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* TODO _CURRENT_ : edit/delete on expanded
+* TODO _CURRENT_ : edit/delete Faction
 * DONE _CURRENT_ : change bbox of Person when edited
 * _CURRENT_ : color for Faction
 
@@ -44,11 +44,11 @@ disable rightclick when already popping out
 *** DONE edit => recompute expand
 *** DONE delete => recompute expand
 *** DONE creation (choix faction) as circle+name => recompute expand
-** [3/8] Faction
+** [4/8] Faction
 *** TODO Color
 *** DONE lister
 *** TODO edit color => change everywhere ?
-*** TODO delete => change expanded
+*** DONE delete => remove border, change expanded
 *** TODO save => save expand state
 *** TODO load => load expand state
 *** DONE load : check not adding twice

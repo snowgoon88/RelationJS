@@ -135,6 +135,8 @@ export class FactionF {
   remove() {
     removeFromAllSelectable( this.labelF );
     this.canvas.remove( this.labelF );
+    this.canvas.remove( this.borderF );
+    this.canvas.remove( this.expandedF );
   }
   toArchive() {
     var archive = {
