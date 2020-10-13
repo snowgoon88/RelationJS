@@ -17,7 +17,7 @@ disable rightclick when already popping out
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
 * TODO _CURRENT_ : edit/delete on expanded
-* TODO _CURRENT_ : change bbox of Person when edited
+* DONE _CURRENT_ : change bbox of Person when edited
 * _CURRENT_ : color for Faction
 
 
@@ -37,13 +37,13 @@ disable rightclick when already popping out
 *** create
 *** DONE (search)
 ** DONE Creation context menu : Faction, Person
-** [3/6] Person
+** [6/6] Person
 *** DONE creation menu : name, list Faction
 *** DONE save/load
 *** DONE group in Fabric
-*** TODO edit => recompute expand
-*** TODO delete => recompute expand
-*** TODO creation (choix faction) as circle+name => recompute expand
+*** DONE edit => recompute expand
+*** DONE delete => recompute expand
+*** DONE creation (choix faction) as circle+name => recompute expand
 ** [3/8] Faction
 *** TODO Color
 *** DONE lister
