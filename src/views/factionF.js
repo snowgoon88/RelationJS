@@ -124,13 +124,23 @@ export class FactionF {
   }
   edit( factionM ) {
     let colorRGB = factionM.color;
-    let colRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 0.2)';
+    let colRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 1.0)';
+    let colTrRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 0.2)';
 
     this.labelF.set( {
       'text' : 'F'+factionM.id+': '+factionM.name,
-      'textBackgroundColor' : colRGBA,
-      'copyTextBackgroundColor' : colRGBA,
+      'textBackgroundColor' : colTrRGBA,
+      'copyTextBackgroundColor' : colTrRGBA,
     } );
+
+    // TODO color expanded, border
+    this.borderF.set( {
+      'stroke' : colRGBA
+    });
+    this.expandedF.set( {
+      'fill' : colTrRGBA
+    });
+      
   }
   remove() {
     removeFromAllSelectable( this.labelF );

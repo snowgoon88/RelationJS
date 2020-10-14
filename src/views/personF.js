@@ -160,7 +160,7 @@ export class PersonF {
       this.factionsColor.forEach( (item,idx) => {
         console.log( "  pie from",startAngle,"to", startAngle + angle );
         let colorRGBA = Object.assign({}, item);
-        colorRGBA.a = 0.2;
+        colorRGBA.a = 1.0;
         let colorString = colorToRGBAString( colorRGBA );
         let tmpSliceOfPieF = new fabric.Circle( {
           originX: 'center',

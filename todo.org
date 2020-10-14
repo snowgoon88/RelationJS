@@ -9,6 +9,7 @@ disable rightclick when already popping out
 ** DONE After edit of Person, looses factions !
 * [5/8] UPD
 ** TODO change model.viewF in model.view (and check that model.view.objF)
+Regarder les différences de hiérarchie d'objet dans F, P, R.
 ** TODO When Faction/Person selected, stay colored even if not hoovered on
 ** TODO RelationC is not used
 ** DONE uniform x,y vs pos, especially in menu, ask, action
@@ -16,12 +17,8 @@ disable rightclick when already popping out
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
-* TODO _CURRENT_ : edit/delete Faction
-* DONE _CURRENT_ : change bbox of Person when edited
 * _CURRENT_ : color for Faction
-
-
-* TODO [7/7] Fabric.js
+* TODO [6/7] Fabric.js
 ** DONE Faction style (Color)
 ** DONE [4/4] click droit pour créer une nouvelle Faction
 *** DONE Event click droit
@@ -44,16 +41,16 @@ disable rightclick when already popping out
 *** DONE edit => recompute expand
 *** DONE delete => recompute expand
 *** DONE creation (choix faction) as circle+name => recompute expand
-** [6/8] Faction
-*** TODO Color
+** [8/8] Faction
+*** DONE Color
+*** DONE edit color => change everywhere ?
 *** DONE lister
-*** TODO edit color => change everywhere ?
 *** DONE delete => remove border, change expanded
 *** DONE save => save expand state
 *** DONE load => load expand state
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
-** DONE [3/4] Relation
+** TODO [3/4] Relation
 <<relationIO>>
 *** DONE lister
 *** DONE save

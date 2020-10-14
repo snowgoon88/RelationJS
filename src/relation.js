@@ -90,9 +90,20 @@ function editFactionActionL( id, fields ) {
   let factionM = listFactionM.getModelL( id );
   factionM.edit( fields );
   let view = factionM.viewF;
-  console.log( "edtFactionActionL factionM=", factionM );
+  console.log( "editFactionActionL factionM=", factionM );
   view.edit( factionM );
   listFactionM.editModelL( factionM.id, factionM );
+
+  if( 'color' in fields ) {
+    // update also Children
+    let listChildrenM = listPersonM.getListModelM().filter( (model,idx) => {
+      return model.listFactionM.includes( factionM );
+    });
+    listChildrenM.forEach( (personM) => {
+      personM.viewF.edit( personM );
+    });
+  }
+  
   canvas.renderAll();
 }
 // used as menu callback,  so (posV, idx)
