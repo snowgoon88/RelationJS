@@ -2,7 +2,7 @@ import {fabric} from 'fabric';
 import { addToAllSelectable, removeFromAllSelectable } from '../utils/select_pop';
 import { colorToRGBAString } from '../utils/color.js';
 import {Vec} from '../utils/vec';
-
+import { ElementF } from './elementF';
 /*
 import {PersonF} from 'path/personF';
 */
@@ -12,19 +12,12 @@ import {PersonF} from 'path/personF';
 // TODO: add colored circles
 var _colHiglightRGBA = "rgba( 255, 0, 0, 0.2)";
 var _colDefaultRGBA = {r:255, g:255, b:255, a:1};
-export class PersonF {
+export class PersonF extends ElementF {
   constructor( canvas, personM, posV ) {
-    
-    this.canvas = canvas;
-    this.id = personM.id;
-    this.model = personM;
-    this.elemType = 'Person';
+    super( canvas, personM.id, personM, 'Person' );
 
     // FabricJS elements
     this.labelF = new fabric.Text( 'P'+personM.id+': '+personM.name, {
-      /* id: personM.id,
-       * model: personM,
-       * elemType: "Person", */
 
       //originX: 'center',
       originY: 'center',
@@ -78,17 +71,10 @@ export class PersonF {
       originY: 'center',
       left: posV.x,
       top: posV.y,
-
-      id: personM.id,
-      model: personM,
-      elemType: "Person",
-      hasRotatingPoint: false,
-      lockRotation: true,
-      lockScalingX: true,
-      lockSclaingY: true,
-      lockSkewingX: true,
-      lockSkewingY: true,
     });
+    this.setElement( this.groupF );
+    this.setNotDeformable( this.groupF );
+    
     this.groupF.on( 'mouseover', (opt) => {
       //console.log( 'MOver' );
       this.labelF.set( {'textBackgroundColor': this.labelF.highlightBackgroundColor} );

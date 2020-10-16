@@ -4,11 +4,11 @@ import { Vec,
          intersectRectVec,
          computeBezierPointVec } from '../utils/vec';
 import { addToAllSelectable, removeFromAllSelectable } from '../utils/select_pop';
+import { ElementF } from './elementF';
 
 /*
 import {RelationF} from 'path/relationF';
 */
-
 // *****************************************************************************
 // ******************************************************************* RelationF
 // require: fabric.js, canvas, Vector
@@ -18,12 +18,10 @@ import {RelationF} from 'path/relationF';
 // - ctrlF [fabric.Circle] : ctrl Point for the path
 // - midF [???] : point a the middle abscisse of the path
 // - labelF [fabric.] : the text, near the mid point
-export class RelationF {
+export class RelationF extends ElementF {
   constructor( canvas, relationM, colRGB ) {
-    this.canvas = canvas;
-    this.id = relationM.id;
-    this.model = relationM;
-    this.elemType = "Relation";
+    super( canvas, relationM.id, relationM, 'Relation' );
+
     // default path is 100,100 --<150,90>--> 200,100
     this.srcPt =  new Vec( 100, 100 );
     this.ctrlPt = new Vec( 150,  80 );
@@ -33,29 +31,18 @@ export class RelationF {
 
     // FabricJS elements
     this.pathF = new fabric.Path( 'M100,100 Q150,80 200,100', {
-      id: relationM.id,
-      model: relationM,
-      elemType: "Relation",
-      
       stroke: colRGB,
       fill: false,
       selectable: true,
       perPixelTargetFind: true,
-      hasControls: false,
-      hasRotatingPoint: false,
-      lockRotation: true,
+
       lockMovementX: true,
       lockMovementY: true,
-      lockScalingX: true,
-      lockScalingY: true,
-      lockSkewingX: true,
-      lockSkewingY: true,
     });
+    this.setElement( this.pathF );
+    this.setNotDeformable( this.pathF );
+    
     this.ctrlF = new fabric.Circle({
-      id: relationM.id,
-      model: relationM,
-      elemType: "Relation",
-
       originX: 'center',
       originY: 'center',
       left: 150,
@@ -64,22 +51,14 @@ export class RelationF {
       stroke: colRGB,
       fill: colRGB,
       selectable: true,
-      hasControls: false,
-      hasRotatingPoint: false,
-      lockRotation: true,
+
       lockMovementX: false,
       lockMovementY: false,
-      lockScalingX: true,
-      lockScalingY: true,
-      lockSkewingX: true,
-      lockSkewingY: true,
     });
+    this.setElement( this.ctrlF );
+    this.setNotDeformable( this.ctrlF );
     
     this.headF = new fabric.Triangle({
-      id: relationM.id,
-      model: relationM,
-      elemType: "Relation",
-
       originX: 'center',
       left: 10,
       //originY: 'center',
@@ -88,22 +67,15 @@ export class RelationF {
       height: 20,
       stroke: colRGB,
       fill: colRGB,
-      selectable: false,
-      hasControls: false,
-      hasRotatingPoint: false,
-      lockRotation: true,
+
       lockMovementX: true,
       lockMovementY: true,
-      lockScalingX: true,
-      lockScalingY: true,
-      lockSkewingX: true,
-      lockSkewingY: true,
     });
+    this.setElement( this.headF );
+    this.setNotDeformable( this.headF );
+    this.setNotSelectable( this.headF );
+    
     this.labelF = new fabric.IText( relationM.id+': '+relationM.name, {
-      id: relationM.id,
-      model: relationM,
-      elemType: "Relation",
-
       originX: 'center',
       originY: 'center',
       left: this.midPt.x,
@@ -111,16 +83,12 @@ export class RelationF {
       fontSize: 16,
       fill: colRGB,
       selectable: false,
-      hasRotatingPoint: false,
-      lockRotation: true,
-      lockScalingX: true,
-      lockSclaingY: true,
-      lockSkewingX: true,
-      lockSkewingY: true,
       //padding: 10,
       // IText
       editable: false,
     });
+    this.setElement( this.labelF );
+    this.setNotDeformable( this.labelF);
     
     
     let srcF = relationM.srcM.viewF;

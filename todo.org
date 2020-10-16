@@ -9,7 +9,40 @@ disable rightclick when already popping out
 ** DONE After edit of Person, looses factions !
 * [5/8] UPD
 ** TODO change model.viewF in model.view (and check that model.view.objF)
+*** added ElementF to ease construction
 Regarder les différences de hiérarchie d'objet dans F, P, R.
+*** FactionM id, name, color, type
+viewF = null;
+viewF = FactionF canvas, id, model=FactionM, elemType
+        labelF
+        borderF
+        expanedF
+        set factionM.viewF = this
+        objF = this.labelF
+
+*** RelationM  id, name, srcM, destM, type
+viewF = null;
+viewF = RelationF canvas, id, model=RelationM, elemType
+        srcPt, ctrlPt, destPt, midPt
+        pathF
+        ctrlF
+        headF
+        labelF
+        srcF = relationM.srcM.viewF
+        destF = relationM.destM.viewF
+        
+*** PersonM id, name, listFactionM, type,
+viewF = null;
+viewF = PersonF canvas, id, model=PersonM, elemType
+        labelF
+        factionsColor
+        itemsF = [labelF,slicesF]
+        groupF
+        objF = this.groupF
+        set personM.viewF = this;
+
+        
+
 ** TODO When Faction/Person selected, stay colored even if not hoovered on
 ** TODO RelationC is not used
 ** DONE uniform x,y vs pos, especially in menu, ask, action

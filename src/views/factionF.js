@@ -2,6 +2,7 @@ import {fabric} from 'fabric';
 import {Vec} from '../utils/vec';
 import { addToAllSelectable, removeFromAllSelectable } from '../utils/select_pop';
 import { getPosF } from './utils';
+import { ElementF } from './elementF';
 /*
 import { FactionF } from 'path/factionF';
 */
@@ -10,46 +11,32 @@ import { FactionF } from 'path/factionF';
 // *****************************************************************************
 // require: fabric.js, canvas
 // IText has NO border (the border is only when selected)
-var _colHiglightRGBA = "rgba( 255, 0, 0, 0.2)";
-export class FactionF {
+var _colHighlightRGBA = "rgba( 255, 0, 0, 0.2)";
+export class FactionF extends ElementF {
   constructor( canvas, factionM, posV ) {
-    this.canvas = canvas;
-    this.id = factionM.id;
-    this.model = factionM;
-    this.elemType = 'Faction';
-    
-    let colorFaction = factionM.color;
-    let colRGBA = 'rgba( '+colorFaction.r+', '+colorFaction.g+', '+colorFaction.b+', 1.0)';
-    let colTransRGBA = 'rgba( '+colorFaction.r+', '+colorFaction.g+', '+colorFaction.b+', 0.2)';
+    super( canvas, factionM.id, factionM, 'Faction' );
+
+    this.colRGBA = this.toRGBA( factionM.color, 1.0 );
+    this.colTransRGBA = this.toRGBA( factionM.color, 0.2 );
+
     this.labelF = new fabric.IText( 'F'+factionM.id+': '+factionM.name, {
-      id: factionM.id,
-      // model is needed in movedFactionF, to find Relations
-      model: factionM,
-      elemType: "Faction",
       originX: 'center',
       originY: 'center',
       left: posV.x,
       top: posV.y,
+
       fontSize: 20,
       fontWeight: 'bold',
-      //underline: 'true',
-      //borderColor: colRGBA,
-      //borderScaleFactor: 2,
-      // textBackgroundColor: colRGBA,
-      // copyTextBackgroundColor: colRGBA,
-      highlightBackgroundColor: _colHiglightRGBA,
-      hasRotatingPoint: false,
-      hasCongtrols: false,
-      lockRotation: true,
-      lockScalingX: true,
-      lockSclaingY: true,
-      lockSkewingX: true,
-      lockSkewingY: true,
+
+      highlightBackgroundColor: _colHighlightRGBA,
+
       padding: 10,
       // IText
       editable: false,
     });
-  
+    this.setElement( this.labelF );
+    this.setNotDeformable( this.labelF );
+
     this.labelF.on( 'mouseover', (opt) => {
       //console.log( 'MOver' );
       this.labelF.set( {'textBackgroundColor': this.labelF.highlightBackgroundColor} );
@@ -77,41 +64,32 @@ export class FactionF {
     this.borderF = new fabric.Rect( {
       width: this.labelF.width * 1.1,
       height: this.labelF.height * 1.1,
-      stroke: colRGBA,
+      stroke: this.colRGBA,
       strokeWidth: 6,
       fill: 'rgba(1,1,1,0)',
-      id: factionM.id,
-      // model is needed in movedFactionF, to find Relations
-      model: factionM,
-      elemType: "Faction",
+
       originX: 'center',
       originY: 'center',
       left: posV.x,
       top: posV.y,
-      hasControls: false,
-      hasBorder: false,
-      selectable: false,
     });
+    this.setElement( this.borderF );
+    this.setNotSelectable( this.borderF );
 
     // and another Rect for the overallBBox
     this.expandedF = new fabric.Rect( {
-      id: factionM.id,
-      // model is needed in movedFactionF, to find Relations
-      model: factionM,
-      elemType: "Faction",
       originX: 'center',
       originY: 'center',
       left: posV.x,
       top: posV.y,
-      hasControls: false,
-      hasBorder: false,
-      selectable: false,
 
       width: 10,
       height: 10,
-      fill: colTransRGBA,
+      fill: this.colTransRGBA,
       visible: false,
     });
+    this.setElement( this.expandedF );
+    this.setNotSelectable( this.expandedF );
     
     addToAllSelectable( this.labelF );
     this.canvas.add( this.borderF );    
@@ -123,22 +101,18 @@ export class FactionF {
     factionM.viewF = this; // TODO legit ?
   }
   edit( factionM ) {
-    let colorRGB = factionM.color;
-    let colRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 1.0)';
-    let colTrRGBA = 'rgba( '+colorRGB.r+', '+colorRGB.g+', '+colorRGB.b+', 0.2)';
-
     this.labelF.set( {
       'text' : 'F'+factionM.id+': '+factionM.name,
-      'textBackgroundColor' : colTrRGBA,
-      'copyTextBackgroundColor' : colTrRGBA,
+      'textBackgroundColor' : this.colTransRGBA,
+      'copyTextBackgroundColor' : this.colTransRGBA,
     } );
 
     // TODO color expanded, border
     this.borderF.set( {
-      'stroke' : colRGBA
+      'stroke' : this.colRGBA
     });
     this.expandedF.set( {
-      'fill' : colTrRGBA
+      'fill' : this.colTransRGBA
     });
       
   }
