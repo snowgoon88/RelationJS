@@ -103,7 +103,7 @@ export class PersonF extends ElementF {
     }
 
     this.updateTextGroup( this.groupF, this.labelF,
-                          'P'+personM.id+': '+personM.name } );
+                          'P'+personM.id+': '+personM.name );
     // this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
     // this.labelF.initDimensions(); // update width and height
     // this.groupF.addWithUpdate();  // for the group
