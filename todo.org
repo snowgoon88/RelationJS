@@ -50,6 +50,7 @@ viewF = PersonF canvas, id, model=PersonM, elemType
 ** DONE update _listFactionM to _listRelationM
 ** DONE check that addXXXAction uses xxxxA /archive/ in every case
 ** DONE is addXXXXAction used as Action ? => YES
+* _CURRENT_ : facilitator for group (with text)
 * _CURRENT_ : color for Faction
 * TODO [6/7] Fabric.js
 ** DONE Faction style (Color)
@@ -83,6 +84,10 @@ viewF = PersonF canvas, id, model=PersonM, elemType
 *** DONE load => load expand state
 *** DONE load : check not adding twice
 *** DONE load: why is _listFactionM not valid after load ?
+** [0/3] GroupText
+*** TODO update
+*** TODO edit ??
+*** TODO move ?
 ** TODO [3/4] Relation
 <<relationIO>>
 *** DONE lister

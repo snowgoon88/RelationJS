@@ -101,10 +101,12 @@ export class PersonF extends ElementF {
         console.log( "  obj["+idx+"]=",JSON.parse(JSON.stringify(objF)) );
       });
     }
-    
-    this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
-    this.labelF.initDimensions(); // update width and height
-    this.groupF.addWithUpdate();  // for the group
+
+    this.updateTextGroup( this.groupF, this.labelF,
+                          'P'+personM.id+': '+personM.name } );
+    // this.labelF.set( {'text' : 'P'+personM.id+': '+personM.name } );
+    // this.labelF.initDimensions(); // update width and height
+    // this.groupF.addWithUpdate();  // for the group
     
     // new factionsColor ?
     let newColors = personM.listFactionM.map( (item,idx) => item.color );

@@ -39,6 +39,13 @@ export class ElementF {
       'selectable': false,
     });
   }
+
+  /** update a Text in a group: labelF is within groupF */
+  updateTextGroup( groupF, labelF, newText ) {
+    labelF.set( {'text' : newText } );
+    labelF.initDimensions;   // update width and height
+    groupF.addWithUpdate();  // for the group
+  }
   
   /** return a string FabricJS string representation of color */
   toRGBA( colorRGB, a ) {
