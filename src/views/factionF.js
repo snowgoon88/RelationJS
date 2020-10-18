@@ -37,29 +37,6 @@ export class FactionF extends ElementF {
     this.setElement( this.labelF );
     this.setNotDeformable( this.labelF );
 
-    this.labelF.on( 'mouseover', (opt) => {
-      //console.log( 'MOver' );
-      this.labelF.set( {'textBackgroundColor': this.labelF.highlightBackgroundColor} );
-      this.canvas.requestRenderAll();
-    });
-    this.labelF.on( 'mouseout', (opt) => {
-      //console.log( 'MOut' );
-      //this.labelF.set( {'textBackgroundColor': this.labelF.copyTextBackgroundColor} );
-      this.labelF.set( {'textBackgroundColor': 'white'} );
-      this.canvas.requestRenderAll();
-    });
-    // When multiple Objects are selected (like two FactionF)
-    // the individual elements DO NOT receive 'moved' or 'modified' event.
-    // We have to operate on canvas directly.
-    /* labelF.on( 'modified', function (opt) {
-     *   console.log( 'EMod', opt );
-     *   let allRelationM = findRelationMWith( opt.target.model );
-     *   allRelationM.forEach( (itemM,idx) => itemM.viewF.updateEnds() );
-     * });
-     * labelF.on( 'moved', (opt) => {
-     *    console.log( 'moved ', labelF.model.name ); 
-     * }); */
-
     // then a Rect as a border
     this.borderF = new fabric.Rect( {
       width: this.labelF.width * 1.1,
@@ -76,6 +53,27 @@ export class FactionF extends ElementF {
     this.setElement( this.borderF );
     this.setNotSelectable( this.borderF );
 
+    // A group with label+border
+    this.groupF = new fabric.Group( [this.labelF, this.borderF], {
+      originX: 'center',
+      originY: 'center',
+      left: posV.x,
+      top: posV.y,
+    });
+    this.setElement( this.groupF );
+    this.setNotDeformable( this.groupF );
+
+    this.groupF.on( 'mouseover', (opt) => {
+      //console.log( 'MOver' );
+      this.labelF.set( {'textBackgroundColor': this.labelF.highlightBackgroundColor} );
+      this.canvas.requestRenderAll();
+    });
+    this.groupF.on( 'mouseout', (opt) => {
+      //console.log( 'MOut' );
+      this.labelF.set( {'textBackgroundColor': this.labelF.copyTextBackgroundColor} );
+      this.canvas.requestRenderAll();
+    });
+    
     // and another Rect for the overallBBox
     this.expandedF = new fabric.Rect( {
       originX: 'center',
@@ -90,24 +88,27 @@ export class FactionF extends ElementF {
     });
     this.setElement( this.expandedF );
     this.setNotSelectable( this.expandedF );
-    
-    addToAllSelectable( this.labelF );
-    this.canvas.add( this.borderF );    
-    this.canvas.add( this.labelF );
+
+    addToAllSelectable( this.groupF );
+    this.canvas.add( this.groupF );
     this.canvas.add( this.expandedF );
     this.expandedF.sendToBack();
-    this.objF = this.labelF;
+    this.objF = this.groupF;
     
     factionM.viewF = this; // TODO legit ?
   }
   edit( factionM ) {
-    this.labelF.set( {
-      'text' : 'F'+factionM.id+': '+factionM.name,
-      'textBackgroundColor' : this.colTransRGBA,
-      'copyTextBackgroundColor' : this.colTransRGBA,
-    } );
+    // In case, text was updated
+    this.updateTextGroup( this.groupF, this.labelF,
+                          'F'+factionM.id+': '+factionM.name );
+    // update border size
+    this.borderF.set( {
+      'width': this.labelF.width * 1.1,
+      'height': this.labelF.height * 1.1,
+    });
+    this.groupF.addWithUpdate();  // for the group
 
-    // TODO color expanded, border
+    // and in case color was changed.
     this.borderF.set( {
       'stroke' : this.colRGBA
     });
@@ -128,13 +129,7 @@ export class FactionF extends ElementF {
     };
     return archive;
   }
-  // this.labelF has moved, move this.borderF
-  updatePos() {
-    // need the 'real' position of this.labelF
-    let posLabel = getPosF( this.labelF );
-    this.borderF.set( {'left': posLabel.left, 'top': posLabel.top} );
-  }
-  isExpanded() {
+   isExpanded() {
     return this.expandedF.get( 'visible' );
   }
   expand( listChildrenM, flag ) {
@@ -158,7 +153,7 @@ export class FactionF extends ElementF {
   _overallBBox( listChildrenM ) {
     console.log( "__FactionF._overallBBox listChildrenM=", listChildrenM );
     // start with this.labelF
-    let posLabel = getPosF( this.labelF );
+    let posLabel = getPosF( this.groupF );
     let bbox = {
       xmin: posLabel.left - posLabel.width/2,
       xmax: posLabel.left + posLabel.width/2,

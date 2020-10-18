@@ -1,7 +1,7 @@
 
 
 /*
-import { HandeMoveF } from 'path/handle_move.js';
+import { HandeMoveF, HandleEditF } from 'path/handle_move.js';
 */
 
 /**
@@ -62,8 +62,6 @@ export class HandleMoveF {
 
     // FactionF : expanded; border
     this.factionFtoUpdate.forEach( (factionF) => {
-      // Border
-      factionF.updatePos();
       // Expanded if needed
       if( factionF.isExpanded() ) {
         // find all its "children" (PersonM of that factionM)
@@ -102,3 +100,27 @@ export class HandleMoveF {
     });
   }
 }
+
+// *****************************************************************************
+export class HandleEditF {
+  constructor( listOfAllPersonM, findRelationMWithFunc ) {
+    this.listPersonM = listOfAllPersonM;
+    this.findRelationMWith = findRelationMWithFunc;
+  }
+
+  // itemF can be a single item or a group or a selection of these
+  hasEdited( editedF ) {
+    // Can only handle FactionM
+    // FactionM
+    if( editedF.model && editedF.model.type === "FactionM" ) {
+      console.log( "  edited FactionM", editedF.model );
+
+      // updated Expanded if needed
+      let factionM = editedF.model;
+      let listChildrenM = this.listPersonM.getListModelM().filter( (personM) => {
+          return personM.listFactionM.includes( factionM );
+        });
+      editedF.expand( listChildrenM, true );
+    }
+  }
+}    

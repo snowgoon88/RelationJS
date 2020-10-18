@@ -8,7 +8,7 @@ import {Vec} from './utils/vec';
 import {allSetSelectable,removeFromAllSelectable,
         allowPopup,setPopable} from './utils/select_pop';
 import { ListModelM } from './models/list_modelM';
-import { HandleMoveF } from './views/handle_move.js';
+import { HandleMoveF, HandleEditF } from './views/handle_move.js';
 
 import {getIdMaxFaction,
         makeNewFactionM,
@@ -103,6 +103,9 @@ function editFactionActionL( id, fields ) {
       personM.viewF.edit( personM );
     });
   }
+
+  // and take care of expanded
+  handleEditF.hasEdited( view );
   
   canvas.renderAll();
 }
@@ -678,7 +681,11 @@ function removeContextElementC() {
 // ************************************************************* Fabric Callback
 // *****************************************************************************
 var handleMoveF = new HandleMoveF( listPersonM, findRelationMWith );
+var handleEditF = new HandleEditF( listPersonM, findRelationMWith );
 
+// When multiple Objects are selected (like two FactionF)
+// the individual elements DO NOT receive 'moved' or 'modified' event.
+// We have to operate on canvas directly.
 canvas.on( 'mouse:down', function (opt) {
   console.log( 'canvas.mouse:down', opt, ); //_allowPopup );
 
